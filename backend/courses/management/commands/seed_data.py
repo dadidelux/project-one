@@ -1,10 +1,39 @@
 from django.core.management.base import BaseCommand
 from accounts.models import User
-from courses.models import Course, Chapter, Lesson
+from courses.models import Course, Chapter, Lesson, Quiz, Question, Choice
 
 
 class Command(BaseCommand):
     help = 'Seed the database with sample Data Science courses'
+
+    def _add_quiz(self, lesson, questions):
+        """Create an idempotent practice quiz for a lesson.
+
+        questions: list of (question_text, [(choice_text, is_correct), ...]) tuples.
+        Each question must have exactly one correct choice.
+        """
+        quiz, _ = Quiz.objects.get_or_create(
+            lesson=lesson,
+            defaults={
+                'title': f'{lesson.title} Practice Quiz',
+                'description': f'Test your understanding of {lesson.title}.',
+                'passing_score': 70,
+                'time_limit_minutes': None,
+            }
+        )
+        for order, (text, choices) in enumerate(questions, start=1):
+            question, _ = Question.objects.get_or_create(
+                quiz=quiz,
+                order=order,
+                defaults={'text': text}
+            )
+            for choice_text, is_correct in choices:
+                Choice.objects.get_or_create(
+                    question=question,
+                    text=choice_text,
+                    defaults={'is_correct': is_correct}
+                )
+        return quiz
 
     def handle(self, *args, **kwargs):
         self.stdout.write('Seeding database...')
@@ -55,7 +84,7 @@ class Command(BaseCommand):
             title='Getting Started',
             defaults={'order': 1, 'description': 'Core concepts every data scientist needs first'}
         )
-        Lesson.objects.get_or_create(
+        l1_1_1, _ = Lesson.objects.get_or_create(
             chapter=ch1_1,
             title='What is Data Science',
             defaults={
@@ -81,7 +110,21 @@ class Command(BaseCommand):
 </ul>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_1_1, [
+            ("What is the first step in the data science process described in the lesson?", [
+                ("Collect data", False), ("Define the question", True),
+                ("Model and predict", False), ("Communicate results", False)]),
+            ("Which step involves removing errors, handling missing values, and formatting data?", [
+                ("Explore and analyse", False), ("Collect data", False),
+                ("Clean and prepare", True), ("Communicate results", False)]),
+            ("According to the lesson, which industry example uses data science for fraud detection and risk assessment?", [
+                ("Healthcare", False), ("Finance", True),
+                ("Retail", False), ("Sports", False)]),
+            ("Data science combines statistics, programming, and which other element?", [
+                ("Domain expertise", True), ("Marketing skills", False),
+                ("Graphic design", False), ("Legal knowledge", False)]),
+        ])
+        l1_1_2, _ = Lesson.objects.get_or_create(
             chapter=ch1_1,
             title='What is Data',
             defaults={
@@ -103,7 +146,20 @@ class Command(BaseCommand):
 <p><strong>Structured data</strong> lives in rows and columns (spreadsheets, SQL tables). <strong>Unstructured data</strong> has no predefined format - text documents, images, audio files, and social media posts are common examples. Roughly 80% of the world's data is unstructured, which is why natural language processing and computer vision are growing fields.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_1_2, [
+            ("Which data type describes categories with a meaningful order, such as education level or star rating?", [
+                ("Numerical", False), ("Categorical", False),
+                ("Ordinal", True), ("Boolean", False)]),
+            ("According to the lesson, roughly what percentage of the world's data is unstructured?", [
+                ("20%", False), ("50%", False), ("80%", True), ("95%", False)]),
+            ("Which type of data lives in rows and columns, such as spreadsheets or SQL tables?", [
+                ("Structured data", True), ("Unstructured data", False),
+                ("Ordinal data", False), ("Boolean data", False)]),
+            ("True/False values like \"is paid\" or \"is active\" are an example of which data type?", [
+                ("Numerical", False), ("Ordinal", False),
+                ("Boolean", True), ("Categorical", False)]),
+        ])
+        l1_1_3, _ = Lesson.objects.get_or_create(
             chapter=ch1_1,
             title='Database Tables',
             defaults={
@@ -133,6 +189,20 @@ ORDER BY name;</code></pre>
 <p>SQL is the universal language for extracting data from relational databases, and nearly every data science role expects proficiency with it.</p>'''
             }
         )
+        self._add_quiz(l1_1_3, [
+            ("In a relational database table, what does a primary key provide?", [
+                ("A unique identifier for every row", True), ("A description of the column data type", False),
+                ("A link to another table only", False), ("The total row count", False)]),
+            ("In the lesson's example, which SQL keyword marks the id column as a unique identifier?", [
+                ("UNIQUE", False), ("NOT NULL", False),
+                ("PRIMARY KEY", True), ("DEFAULT", False)]),
+            ("What does a foreign key do?", [
+                ("References a primary key in another table, creating relationships", True), ("Encrypts sensitive data", False),
+                ("Automatically deletes duplicate rows", False), ("Converts data types", False)]),
+            ("In the example query, which clause filters students who enrolled after '2025-01-01'?", [
+                ("ORDER BY", False), ("GROUP BY", False),
+                ("WHERE", True), ("HAVING", False)]),
+        ])
 
         # Chapter 2: Python Refresher
         ch1_2, _ = Chapter.objects.get_or_create(
@@ -140,7 +210,7 @@ ORDER BY name;</code></pre>
             title='Python Refresher',
             defaults={'order': 2, 'description': 'A full Python fundamentals pass for beginners'}
         )
-        Lesson.objects.get_or_create(
+        l1_2_1, _ = Lesson.objects.get_or_create(
             chapter=ch1_2,
             title='Printing, Variables & Arithmetic',
             defaults={
@@ -176,7 +246,19 @@ print("Hello,", name)</code></pre>
 <p>The <code>input()</code> function always returns a string. Use <code>int()</code> or <code>float()</code> to convert it for arithmetic.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_2_1, [
+            ("What does the input() function always return?", [
+                ("An integer", False), ("A string", True),
+                ("A float", False), ("A boolean", False)]),
+            ("What is the result of 15 // 4 according to the lesson's table?", [
+                ("3.75", False), ("3", True), ("4", False), ("60", False)]),
+            ("What is the result of 15 % 4?", [
+                ("3", True), ("3.75", False), ("0", False), ("11", False)]),
+            ("Does Python require you to declare a variable's type before assigning a value?", [
+                ("Yes, always", False), ("No, Python infers it automatically", True),
+                ("Only for numbers", False), ("Only for strings", False)]),
+        ])
+        l1_2_2, _ = Lesson.objects.get_or_create(
             chapter=ch1_2,
             title='Data Types, Type Casting & Checking Types',
             defaults={
@@ -214,7 +296,19 @@ print(float("3.14"))  # 3.14</code></pre>
 <p>If a conversion is not possible, Python raises a <code>ValueError</code>.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_2_2, [
+            ("Which function would you use to check if a variable is an instance of a particular type?", [
+                ("type()", False), ("isinstance()", True),
+                ("cast()", False), ("check()", False)]),
+            ("What error does Python raise when a type conversion is not possible?", [
+                ("TypeError", False), ("ValueError", True),
+                ("NameError", False), ("SyntaxError", False)]),
+            ("According to the lesson, what does int(3.9) return?", [
+                ("4", False), ("3.9", False), ("3", True), ("An error", False)]),
+            ("Which built-in type represents ordered, mutable collections like [1, 2, 3]?", [
+                ("dict", False), ("tuple", False), ("list", True), ("set", False)]),
+        ])
+        l1_2_3, _ = Lesson.objects.get_or_create(
             chapter=ch1_2,
             title='Lists',
             defaults={
@@ -247,7 +341,21 @@ numbers.reverse()       # Reverse in place
 evens = [x for x in range(10) if x % 2 == 0]  # [0, 2, 4, 6, 8]</code></pre>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_2_3, [
+            ("What does fruits[-1] return?", [
+                ("The first item", False), ("The last item", True),
+                ("An empty list", False), ("An error", False)]),
+            ("Which method adds an item to the end of a list?", [
+                ("insert()", False), ("append()", True),
+                ("extend()", False), ("push()", False)]),
+            ("What does the list comprehension [x for x in range(10) if x % 2 == 0] produce?", [
+                ("All odd numbers 0-9", False), ("All even numbers 0-9", True),
+                ("Numbers 0-10", False), ("An error", False)]),
+            ("Which method removes and returns the last item of a list?", [
+                ("remove()", False), ("pop()", True),
+                ("delete()", False), ("clear()", False)]),
+        ])
+        l1_2_4, _ = Lesson.objects.get_or_create(
             chapter=ch1_2,
             title='Tuples',
             defaults={
@@ -281,7 +389,20 @@ print(lo, hi)  # 1 5</code></pre>
 <p>Use tuples when the data should not change. Use lists when you need to modify the collection.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_2_4, [
+            ("What is the defining characteristic of a tuple compared to a list?", [
+                ("Tuples are immutable", True), ("Tuples can only hold numbers", False),
+                ("Tuples are always sorted", False), ("Tuples cannot be unpacked", False)]),
+            ("How do you correctly create a one-element tuple containing 42?", [
+                ("(42)", False), ("[42]", False), ("(42,)", True), ("{42}", False)]),
+            ("Why can tuples be used as dictionary keys while lists cannot?", [
+                ("Tuples are immutable and hashable", True), ("Tuples are faster", False),
+                ("Lists take more memory", False), ("Dictionaries reject lists arbitrarily", False)]),
+            ("What does x, y = coordinates do when coordinates = (10, 20)?", [
+                ("Raises an error", False), ("Unpacks values into x and y", True),
+                ("Creates a new tuple", False), ("Converts the tuple to a list", False)]),
+        ])
+        l1_2_5, _ = Lesson.objects.get_or_create(
             chapter=ch1_2,
             title='Dictionaries',
             defaults={
@@ -313,7 +434,19 @@ person.items()      # Key-value pairs as tuples
 <p>Dictionaries are ideal for structured data - think of them as rows in a table where the column names are keys.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_2_5, [
+            ("What does person.get(\"email\", \"N/A\") return if \"email\" is not a key in person?", [
+                ("None", False), ("An error", False), ("\"N/A\"", True), ("An empty string", False)]),
+            ("Which statement removes a key from a dictionary?", [
+                ("pop_key()", False), ("remove()", False), ("del person[key]", True), ("drop()", False)]),
+            ("What does person.items() return?", [
+                ("Only the keys", False), ("Only the values", False),
+                ("Key-value pairs as tuples", True), ("A sorted list of keys", False)]),
+            ("What is the main advantage of dictionaries for lookups, per the lesson?", [
+                ("They are always sorted", False), ("They are fast for lookups", True),
+                ("They use less memory than lists always", False), ("They cannot be modified", False)]),
+        ])
+        l1_2_6, _ = Lesson.objects.get_or_create(
             chapter=ch1_2,
             title='Conditional (If) Statements',
             defaults={
@@ -357,7 +490,19 @@ if age < 18 or not has_id:
 <p>Python uses indentation (spaces or tabs) to define code blocks. The standard is4 spaces per level.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_2_6, [
+            ("In the lesson's grading example, what grade is printed for a score of 85?", [
+                ("A", False), ("B", True), ("C", False), ("F", False)]),
+            ("What does the and operator require for a compound condition to be True?", [
+                ("Only one condition needs to be True", False), ("Both conditions must be True", True),
+                ("Neither condition needs to be True", False), ("It negates the condition", False)]),
+            ("What is the standard indentation used to define code blocks in Python, per the lesson?", [
+                ("2 spaces", False), ("4 spaces", True),
+                ("A single tab only", False), ("8 spaces", False)]),
+            ("Which operator checks for \"not equal to\" in Python?", [
+                ("<>", False), ("=/=", False), ("!=", True), ("!==", False)]),
+        ])
+        l1_2_7, _ = Lesson.objects.get_or_create(
             chapter=ch1_2,
             title='For-Loops',
             defaults={
@@ -395,7 +540,20 @@ upper = [n.upper() for n in names]
 <p>Use <code>break</code> to exit a loop early and <code>continue</code> to skip to the next iteration.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_2_7, [
+            ("What does range(2, 6) produce when looped over?", [
+                ("2, 3, 4, 5", True), ("2, 3, 4, 5, 6", False),
+                ("0, 1, 2, 3, 4, 5", False), ("6, 5, 4, 3, 2", False)]),
+            ("Which function lets you loop over a list while also getting the index of each item?", [
+                ("index()", False), ("enumerate()", True), ("zip()", False), ("range()", False)]),
+            ("What does continue do inside a loop?", [
+                ("Exits the loop completely", False), ("Skips to the next iteration", True),
+                ("Pauses the loop", False), ("Restarts the loop from the beginning", False)]),
+            ("What is a compact way to build a list from a loop, according to the lesson?", [
+                ("A while loop", False), ("A list comprehension", True),
+                ("A dictionary comprehension", False), ("A tuple", False)]),
+        ])
+        l1_2_8, _ = Lesson.objects.get_or_create(
             chapter=ch1_2,
             title='While Loops',
             defaults={
@@ -433,7 +591,22 @@ while i < 10:
 <p>If the condition never becomes False, the loop runs forever. Always make sure the loop variable is updated inside the body.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_2_8, [
+            ("When are while-loops especially useful, according to the lesson?", [
+                ("When you know exactly how many iterations you need", False),
+                ("When you do not know in advance how many iterations you need", True),
+                ("Only for looping over lists", False), ("Only for looping over dictionaries", False)]),
+            ("What causes an infinite loop?", [
+                ("Using break inside the loop", False), ("The condition never becoming False", True),
+                ("Using continue inside the loop", False), ("Setting count = 0 before the loop", False)]),
+            ("In the example `while True: ... if command == \"quit\": break`, what causes the loop to end?", [
+                ("The password matching", False), ("count reaching 5", False),
+                ("Entering \"quit\"", True), ("An error being raised", False)]),
+            ("What does continue do in the even-number-skipping example?", [
+                ("Stops the loop entirely", False), ("Skips printing when i is even", True),
+                ("Skips printing when i is odd", False), ("Doubles the value of i", False)]),
+        ])
+        l1_2_9, _ = Lesson.objects.get_or_create(
             chapter=ch1_2,
             title='Functions',
             defaults={
@@ -468,7 +641,20 @@ print_report("Sales", 1500)</code></pre>
 <p>This is a light introduction. The deeper Functions lesson in the next chapter covers docstrings, type hints, and lambda functions.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_2_9, [
+            ("What keyword is used to define a function in Python?", [
+                ("func", False), ("def", True), ("function", False), ("define", False)]),
+            ("In def greet(name, greeting=\"Hello\"), what is \"Hello\"?", [
+                ("A required argument", False), ("A default parameter value", True),
+                ("A return value", False), ("A type hint", False)]),
+            ("What does greet(\"Alice\") return using the lesson's default-parameter example?", [
+                ("\"Hello, Alice!\"", True), ("\"Hi, Alice!\"", False),
+                ("None", False), ("An error, since greeting is missing", False)]),
+            ("What is true of a function like print_report that only calls print() internally?", [
+                ("It must return a value", False), ("It can execute without returning a value", True),
+                ("It cannot take parameters", False), ("It always raises an error", False)]),
+        ])
+        l1_2_10, _ = Lesson.objects.get_or_create(
             chapter=ch1_2,
             title='Functional Programming Concepts',
             defaults={
@@ -504,6 +690,21 @@ by_length = sorted(words, key=lambda w: len(w))
 <p>In data science, you will see lambda functions used frequently with Pandas <code>apply()</code> and <code>transform()</code>.</p>'''
             }
         )
+        self._add_quiz(l1_2_10, [
+            ("What does double = lambda x: x * 2 create?", [
+                ("A named function called double", False),
+                ("An anonymous one-line function assigned to double", True),
+                ("A list of doubled values", False), ("A syntax error", False)]),
+            ("What does filter(lambda x: x % 2 == 0, numbers) do?", [
+                ("Doubles every number", False), ("Keeps only even numbers", True),
+                ("Keeps only odd numbers", False), ("Sorts the numbers", False)]),
+            ("What does sorted(words, key=lambda w: len(w)) sort words by?", [
+                ("Alphabetical order", False), ("Length", True),
+                ("Reverse alphabetical order", False), ("First letter only", False)]),
+            ("Where does the lesson say lambda functions are frequently used in data science?", [
+                ("With Pandas apply() and transform()", True), ("Only in web development", False),
+                ("Only for sorting numbers", False), ("Never, they are discouraged", False)]),
+        ])
 
         # Chapter 3: Python for Data Science
         ch1_3, _ = Chapter.objects.get_or_create(
@@ -511,7 +712,7 @@ by_length = sorted(words, key=lambda w: len(w))
             title='Python for Data Science',
             defaults={'order': 3, 'description': 'Essential Python skills for working with data'}
         )
-        Lesson.objects.get_or_create(
+        l1_3_1, _ = Lesson.objects.get_or_create(
             chapter=ch1_3,
             title='Classes and Dataclasses',
             defaults={
@@ -624,7 +825,27 @@ print(exp.average)  # 0.4</code></pre>
 <p>In data science workflows, dataclasses are perfect for structuring experiment configs, pipeline steps, and model parameters — anywhere you want clear, typed data without boilerplate.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_3_1, [
+            ("What decorator eliminates boilerplate by auto-generating __init__, __repr__, and __eq__?", [
+                ("@property", False), ("@dataclass", True),
+                ("@staticmethod", False), ("@classmethod", False)]),
+            ("In the Counter example, why does Counter.count end up as 2 after creating two instances?", [
+                ("count is a class attribute shared across instances, incremented each time", True),
+                ("Each instance has its own separate count starting at 0", False),
+                ("id is a class attribute", False), ("Python resets counters automatically", False)]),
+            ("According to the lesson, dataclasses were introduced in which Python version?", [
+                ("Python 2.7", False), ("Python 3.0", False),
+                ("Python 3.7+", True), ("Python 3.10+", False)]),
+            ("Why does the Experiment dataclass use field(default_factory=list) for results?", [
+                ("To avoid the mutable default value being shared across instances", True),
+                ("Because lists cannot have default values", False),
+                ("To make the field immutable", False), ("It has no real purpose, just style", False)]),
+            ("Which use case does the lesson recommend a dataclass for?", [
+                ("Complex logic and inheritance hierarchies", False),
+                ("Data containers, config, and DTOs", True),
+                ("Only mathematical functions", False), ("Database migrations", False)]),
+        ])
+        l1_3_2, _ = Lesson.objects.get_or_create(
             chapter=ch1_3,
             title='DataFrames',
             defaults={
@@ -658,7 +879,22 @@ df.describe()</code></pre>
 <p>DataFrames make it easy to clean, transform, filter, and aggregate tabular data - the bread and butter of data science work.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_3_2, [
+            ("What is a DataFrame described as in the lesson?", [
+                ("A one-dimensional array", False),
+                ("A programmable spreadsheet with labelled rows and columns", True),
+                ("A type of Python list", False), ("A SQL database engine", False)]),
+            ("Which code correctly filters rows where the score column is greater than 80?", [
+                ("df.score > 80", False), ("df[df[\"score\"] > 80]", True),
+                ("df.filter(score > 80)", False), ("df[\"score\"].where(80)", False)]),
+            ("What does df.describe() provide?", [
+                ("Summary statistics", True), ("A list of duplicate rows", False),
+                ("The file path of the data", False), ("A count of missing values only", False)]),
+            ("In the lesson's example, how is a new \"passed\" column added based on the score column?", [
+                ("df.add(\"passed\")", False), ("df[\"passed\"] = df[\"score\"] >= 80", True),
+                ("df.passed = True", False), ("df.new_column(\"passed\", 80)", False)]),
+        ])
+        l1_3_3, _ = Lesson.objects.get_or_create(
             chapter=ch1_3,
             title='Functions',
             defaults={
@@ -688,7 +924,21 @@ df["age_dog_years"] = df["age"].apply(lambda x: x * 7)</code></pre>
 <p>Good documentation and type hints make your code easier for teammates (and future you) to understand.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l1_3_3, [
+            ("What does the calculate_mean function in the lesson return for the list [10, 20, 30, 40, 50]?", [
+                ("25.0", False), ("30.0", True), ("150", False), ("50.0", False)]),
+            ("In the lesson's Pandas example, what does df[\"age\"].apply(lambda x: x * 7) do?", [
+                ("Filters ages over 7", False), ("Multiplies each age value by 7", True),
+                ("Divides each age by 7", False), ("Adds 7 to the DataFrame", False)]),
+            ("What is the purpose of a docstring, as shown in the normalise function example?", [
+                ("To declare variable types", False), ("To document what the function does", True),
+                ("To improve performance", False), ("To catch errors automatically", False)]),
+            ("What does the type hint list[float] in normalise(values: list[float]) -> list[float] indicate?", [
+                ("The function takes and returns a list of floats", True),
+                ("The function only works with a single float", False),
+                ("The function returns a string", False), ("The function is deprecated", False)]),
+        ])
+        l1_3_4, _ = Lesson.objects.get_or_create(
             chapter=ch1_3,
             title='Data Preparation',
             defaults={
@@ -725,6 +975,20 @@ df = df[(df["price"] >= q1 - 1.5 * iqr) & (df["price"] <= q3 + 1.5 * iqr)]</code
 <p>Data scientists often spend 60-80% of their time on data preparation. Getting this right is critical - garbage in, garbage out.</p>'''
             }
         )
+        self._add_quiz(l1_3_4, [
+            ("According to the lesson, what percentage of a data scientist's time is often spent on data preparation?", [
+                ("10-20%", False), ("30-40%", False), ("60-80%", True), ("90-100%", False)]),
+            ("In the example, what does df.dropna(subset=[\"price\", \"date\"]) do?", [
+                ("Drops rows where price or date is missing", True),
+                ("Drops the price and date columns entirely", False),
+                ("Fills missing prices with the median", False), ("Converts price and date to strings", False)]),
+            ("What method is used in the example to detect outliers?", [
+                ("Standard deviation only", False), ("IQR (interquartile range)", True),
+                ("Correlation matrix", False), ("Regression residuals", False)]),
+            ("What is the common term for the process of cleaning and transforming raw data into a usable format?", [
+                ("Data mining", False), ("Data wrangling", True),
+                ("Data warehousing", False), ("Data encryption", False)]),
+        ])
 
         # ──────────────────────────────────────────────
         # Course 2: Data Science Math & Statistics
@@ -743,7 +1007,7 @@ df = df[(df["price"] >= q1 - 1.5 * iqr) & (df["price"] <= q3 + 1.5 * iqr)]</code
             title='Math Foundations',
             defaults={'order': 1, 'description': 'Essential math concepts for data analysis'}
         )
-        Lesson.objects.get_or_create(
+        l2_1_1, _ = Lesson.objects.get_or_create(
             chapter=ch2_1,
             title='Linear Functions',
             defaults={
@@ -769,7 +1033,19 @@ print(total_cost(5))  # $150</code></pre>
 <p>Linear functions appear everywhere in data science: linear regression, feature scaling, and even as activation functions in simple neural networks.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l2_1_1, [
+            ("In the linear equation y = mx + b, what does 'm' represent?", [
+                ("The y-intercept", False), ("The slope", True),
+                ("The output variable", False), ("The error term", False)]),
+            ("In the consulting example, what is the base fee before any hourly charges?", [
+                ("$20", False), ("$50", True), ("$100", False), ("$150", False)]),
+            ("According to the example function total_cost(hours) = 20 * hours + 50, what is the cost for 5 hours?", [
+                ("$100", False), ("$120", False), ("$150", True), ("$170", False)]),
+            ("What does 'b' represent in y = mx + b?", [
+                ("The slope", False), ("The value of y when x = 0", True),
+                ("The independent variable", False), ("The number of data points", False)]),
+        ])
+        l2_1_2, _ = Lesson.objects.get_or_create(
             chapter=ch2_1,
             title='Plotting Functions',
             defaults={
@@ -801,7 +1077,21 @@ plt.show()</code></pre>
 <p>Plotting helps you spot trends, outliers, and the shape of your data before building models. A scatter plot can reveal whether a linear model is appropriate or if you need something more complex.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l2_1_2, [
+            ("Which Matplotlib function is used to display a plotted figure, per the lesson's example?", [
+                ("plt.render()", False), ("plt.show()", True),
+                ("plt.display()", False), ("plt.output()", False)]),
+            ("Which function shape is described as \"rapid growth\"?", [
+                ("Linear", False), ("Quadratic", False), ("Exponential", True), ("Logarithmic", False)]),
+            ("What does np.linspace(-10, 10, 100) do in the example?", [
+                ("Creates 100 evenly spaced values between -10 and 10", True),
+                ("Creates a plot title", False), ("Draws a grid", False), ("Filters outliers", False)]),
+            ("According to the lesson, what can a scatter plot help you decide?", [
+                ("Whether a linear model is appropriate for the data", True),
+                ("The exact regression coefficients", False),
+                ("The sample size needed", False), ("The database schema", False)]),
+        ])
+        l2_1_3, _ = Lesson.objects.get_or_create(
             chapter=ch2_1,
             title='Slope and Intercept',
             defaults={
@@ -831,6 +1121,21 @@ print(f"y = {m}x + {b}")  # y = 2.0x + 1.0</code></pre>
 <p>In linear regression, the algorithm finds the slope and intercept that minimise the distance between the line and the actual data points.</p>'''
             }
         )
+        self._add_quiz(l2_1_3, [
+            ("What does the slope formula m = (y2 - y1) / (x2 - x1) calculate?", [
+                ("The average of x and y", False), ("The rate of change of y per unit of x", True),
+                ("The y-intercept", False), ("The correlation coefficient", False)]),
+            ("What does a negative slope indicate?", [
+                ("y increases as x increases", False), ("y decreases as x increases", True),
+                ("There is no relationship", False), ("The line is vertical", False)]),
+            ("In the Python example, what values are computed for m and b?", [
+                ("m = 1.0, b = 2.0", False), ("m = 2.0, b = 1.0", True),
+                ("m = 0, b = 0", False), ("m = 3.0, b = 5.0", False)]),
+            ("In linear regression, what does the algorithm find, according to the lesson?", [
+                ("The mean and median of the data", False),
+                ("The slope and intercept that minimise distance to the data points", True),
+                ("The maximum value only", False), ("The number of outliers", False)]),
+        ])
 
         # Chapter 2: Statistics Fundamentals
         ch2_2, _ = Chapter.objects.get_or_create(
@@ -838,7 +1143,7 @@ print(f"y = {m}x + {b}")  # y = 2.0x + 1.0</code></pre>
             title='Statistics Fundamentals',
             defaults={'order': 2, 'description': 'Statistical concepts for analysing and interpreting data'}
         )
-        Lesson.objects.get_or_create(
+        l2_2_1, _ = Lesson.objects.get_or_create(
             chapter=ch2_2,
             title='Introduction to Statistics',
             defaults={
@@ -865,7 +1170,22 @@ print(f"y = {m}x + {b}")  # y = 2.0x + 1.0</code></pre>
 </table>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l2_2_1, [
+            ("Which branch of statistics summarises and describes features of a dataset, like mean and median?", [
+                ("Inferential statistics", False), ("Descriptive statistics", True),
+                ("Predictive statistics", False), ("Applied statistics", False)]),
+            ("What is a \"sample\" in statistics, per the lesson?", [
+                ("The entire group being studied", False), ("A subset of the population", True),
+                ("A type of chart", False), ("A statistical error", False)]),
+            ("According to the lesson's terminology table, what is an \"observation\"?", [
+                ("A characteristic that can vary", False), ("A single data point or row in a dataset", True),
+                ("The spread of values", False), ("A value very different from others", False)]),
+            ("Why do we typically collect samples rather than study entire populations?", [
+                ("Samples are always more accurate", False),
+                ("Studying entire populations is usually impractical", True),
+                ("Populations don't have variability", False), ("Samples eliminate the need for statistics", False)]),
+        ])
+        l2_2_2, _ = Lesson.objects.get_or_create(
             chapter=ch2_2,
             title='Percentiles',
             defaults={
@@ -896,7 +1216,20 @@ print(f"75th: ${p75:,.0f}")  # $101,250</code></pre>
 <pre><code>iqr = p75 - p25  # $52,500</code></pre>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l2_2_2, [
+            ("What does the 50th percentile represent?", [
+                ("The lowest value", False), ("The median", True),
+                ("The highest value", False), ("The mean", False)]),
+            ("In the lesson's salary example, what is the computed 50th percentile?", [
+                ("$48,750", False), ("$66,000", True), ("$101,250", False), ("$52,500", False)]),
+            ("What does the IQR (interquartile range) measure?", [
+                ("The full range of the dataset", False), ("The middle 50% of the data", True),
+                ("The standard deviation", False), ("The correlation between variables", False)]),
+            ("Which NumPy function is used to calculate percentiles in the lesson?", [
+                ("np.mean()", False), ("np.percentile()", True),
+                ("np.median()", False), ("np.quantile_range()", False)]),
+        ])
+        l2_2_3, _ = Lesson.objects.get_or_create(
             chapter=ch2_2,
             title='Standard Deviation',
             defaults={
@@ -927,7 +1260,18 @@ print(f"Std Dev: {std_dev:.2f}")  # 10.02</code></pre>
 <p>This rule helps you quickly assess whether a value is typical or unusual.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l2_2_3, [
+            ("What does a low standard deviation indicate about a dataset?", [
+                ("Values are widely dispersed", False), ("Values cluster tightly around the mean", True),
+                ("The dataset has no mean", False), ("The dataset contains only outliers", False)]),
+            ("According to the 68-95-99.7 rule, approximately what percentage of values fall within 2 standard deviations of the mean for normally distributed data?", [
+                ("68%", False), ("95%", True), ("99.7%", False), ("100%", False)]),
+            ("In the lesson's Python example, what standard deviation is computed for the test scores?", [
+                ("87.3", False), ("10.02", True), ("100", False), ("65", False)]),
+            ("Which NumPy function computes standard deviation directly?", [
+                ("np.mean()", False), ("np.std()", True), ("np.var()", False), ("np.percentile()", False)]),
+        ])
+        l2_2_4, _ = Lesson.objects.get_or_create(
             chapter=ch2_2,
             title='Variance',
             defaults={
@@ -955,7 +1299,21 @@ print(f"Sample variance: {sample_var:.2f}")  # 8.56</code></pre>
 <p>Squaring ensures positive and negative deviations don't cancel each other out. However, it also means variance is expressed in squared units (e.g., dollars squared), which is why we prefer standard deviation for interpretation.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l2_2_4, [
+            ("What is the relationship between variance and standard deviation?", [
+                ("They are unrelated", False), ("Standard deviation is the square root of variance", True),
+                ("Variance is always larger than the mean", False),
+                ("Variance is the square root of standard deviation", False)]),
+            ("What divisor does sample variance use to correct bias, compared to population variance?", [
+                ("N", False), ("N-1", True), ("N+1", False), ("2N", False)]),
+            ("In the lesson's NumPy example, what argument gives the sample variance instead of population variance?", [
+                ("ddof=0", False), ("ddof=1", True), ("bias=True", False), ("sample=True", False)]),
+            ("Why does the formula square the differences from the mean?", [
+                ("To make the result negative", False),
+                ("To prevent positive and negative deviations from cancelling out", True),
+                ("To convert the units to dollars", False), ("To simplify computation only", False)]),
+        ])
+        l2_2_5, _ = Lesson.objects.get_or_create(
             chapter=ch2_2,
             title='Correlation',
             defaults={
@@ -991,7 +1349,19 @@ plt.show()</code></pre>
 <p>A strong positive correlation suggests that more study time is associated with higher scores - but remember, correlation does not prove causation.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l2_2_5, [
+            ("What is the range of the Pearson correlation coefficient?", [
+                ("0 to 1", False), ("-1 to +1", True), ("-100 to +100", False), ("0 to 100", False)]),
+            ("What does a correlation of 0 indicate?", [
+                ("A perfect positive relationship", False), ("A perfect negative relationship", False),
+                ("No linear relationship", True), ("An error in calculation", False)]),
+            ("In the study-hours vs exam-score example, what correlation value is computed?", [
+                ("0.312", False), ("0.994", True), ("-0.994", False), ("0.5", False)]),
+            ("What important caveat does the lesson raise about correlation?", [
+                ("Correlation always implies causation", False), ("Correlation does not prove causation", True),
+                ("Correlation can only be calculated with NumPy", False), ("Correlation cannot be negative", False)]),
+        ])
+        l2_2_6, _ = Lesson.objects.get_or_create(
             chapter=ch2_2,
             title='Correlation Matrix',
             defaults={
@@ -1028,7 +1398,20 @@ plt.show()</code></pre>
 </ul>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l2_2_6, [
+            ("What value always appears on the diagonal of a correlation matrix?", [
+                ("0", False), ("-1", False), ("1", True), ("The mean of the dataset", False)]),
+            ("What does it mean that a correlation matrix is \"symmetric\"?", [
+                ("corr(A,B) = corr(B,A)", True), ("All values are equal", False),
+                ("It has the same number of rows and columns only", False), ("It contains no negative values", False)]),
+            ("Which Pandas method computes a correlation matrix for all numeric columns?", [
+                ("data.corr()", True), ("data.correlate()", False),
+                ("data.matrix()", False), ("data.pairwise()", False)]),
+            ("Which library and function does the lesson use to visualise the correlation matrix as a heatmap?", [
+                ("matplotlib.pyplot.matrix()", False), ("seaborn.heatmap()", True),
+                ("pandas.plot_heatmap()", False), ("numpy.heatmap()", False)]),
+        ])
+        l2_2_7, _ = Lesson.objects.get_or_create(
             chapter=ch2_2,
             title='Correlation vs Causality',
             defaults={
@@ -1064,6 +1447,21 @@ plt.show()</code></pre>
 <p>As a data scientist, always ask: "Is there a confounding variable?" before declaring a causal relationship.</p>'''
             }
         )
+        self._add_quiz(l2_2_7, [
+            ("In the ice cream and drowning example, what is the hidden confounding variable?", [
+                ("Ice cream flavor", False), ("Hot weather", True),
+                ("Swimming pool capacity", False), ("Season length", False)]),
+            ("What does \"reverse causality\" mean?", [
+                ("There is no relationship at all", False),
+                ("The cause-effect direction is the opposite of what is assumed", True),
+                ("The correlation is exactly 0", False), ("The data was measured incorrectly", False)]),
+            ("What kind of study design does the lesson say is generally needed to establish causation?", [
+                ("Observational surveys", False), ("Randomised controlled experiments", True),
+                ("Correlation matrices", False), ("Percentile analysis", False)]),
+            ("What is \"temporal precedence\" in the context of establishing causation?", [
+                ("The cause must happen before the effect", True), ("The data must be recent", False),
+                ("The sample size must be large", False), ("The p-value must be below 0.05", False)]),
+        ])
 
         # ──────────────────────────────────────────────
         # Course 3: Regression Analysis
@@ -1082,7 +1480,7 @@ plt.show()</code></pre>
             title='Linear Regression',
             defaults={'order': 1, 'description': 'Understanding and applying linear regression models'}
         )
-        Lesson.objects.get_or_create(
+        l3_1_1, _ = Lesson.objects.get_or_create(
             chapter=ch3_1,
             title='Linear Regression Basics',
             defaults={
@@ -1114,7 +1512,20 @@ print(f"R²: {model.score(X, y):.3f}")     # 0.72</code></pre>
 <p>The model finds the line that minimises the sum of squared residuals - the differences between actual and predicted values.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l3_1_1, [
+            ("In the simple linear regression equation y = β₀ + β₁x + ε, what does ε represent?", [
+                ("The slope", False), ("The intercept", False),
+                ("The error term", True), ("The R-squared value", False)]),
+            ("In the lesson's sklearn example, what is the computed intercept?", [
+                ("0.6", False), ("2.2", True), ("0.72", False), ("5", False)]),
+            ("Which scikit-learn class is used to fit a linear regression model?", [
+                ("LinearModel", False), ("LinearRegression", True),
+                ("OLSRegressor", False), ("sklearn.fit()", False)]),
+            ("What does the linear regression model minimise when fitting the line?", [
+                ("The number of data points", False), ("The sum of squared residuals", True),
+                ("The p-value", False), ("The correlation coefficient", False)]),
+        ])
+        l3_1_2, _ = Lesson.objects.get_or_create(
             chapter=ch3_1,
             title='Regression Table',
             defaults={
@@ -1151,7 +1562,22 @@ print(model.summary())</code></pre>
 </ul>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l3_1_2, [
+            ("Which library does the lesson use to produce a detailed regression summary table?", [
+                ("scikit-learn", False), ("statsmodels", True), ("seaborn", False), ("scipy", False)]),
+            ("What does the \"P>|t|\" column in a regression table represent?", [
+                ("The coefficient estimate", False),
+                ("The p-value - probability the result occurred by chance", True),
+                ("The confidence interval width", False), ("The R-squared value", False)]),
+            ("For model comparison, what does the lesson say about AIC and BIC values?", [
+                ("Higher is better", False), ("Lower is better", True),
+                ("They must equal zero", False), ("They are irrelevant to comparison", False)]),
+            ("What does the F-statistic test in a regression table?", [
+                ("Whether a single coefficient is zero", False),
+                ("Whether the model as a whole is significant", True),
+                ("The variance of residuals", False), ("The sample size adequacy", False)]),
+        ])
+        l3_1_3, _ = Lesson.objects.get_or_create(
             chapter=ch3_1,
             title='Regression Info',
             defaults={
@@ -1190,7 +1616,21 @@ plt.show()</code></pre>
 </ul>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l3_1_3, [
+            ("What does \"homoscedasticity\" refer to as a regression assumption?", [
+                ("Independence of observations", False),
+                ("Constant variance of residuals across all levels of x", True),
+                ("Normal distribution of the predictors", False), ("Linear relationship between variables", False)]),
+            ("Which plot is used in the lesson to check the normality of residuals?", [
+                ("Residual plot", False), ("Q-Q plot", True), ("Bar chart", False), ("Histogram of x values", False)]),
+            ("What is suggested as a remedy when the relationship is non-linear?", [
+                ("Ignore it", False), ("Try polynomial features or non-linear models", True),
+                ("Remove all data points", False), ("Use only categorical variables", False)]),
+            ("What should you check to detect heteroscedasticity?", [
+                ("A residual plot showing non-constant spread", True), ("The dataset's row count", False),
+                ("The correlation matrix", False), ("The p-value of the intercept", False)]),
+        ])
+        l3_1_4, _ = Lesson.objects.get_or_create(
             chapter=ch3_1,
             title='Coefficients',
             defaults={
@@ -1223,7 +1663,23 @@ print(model_scaled.coef_)  # Now comparable across variables</code></pre>
 <p>A 95% confidence interval for a coefficient means: if we repeated the study 100 times, the true coefficient would fall within this range in about 95 of them.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l3_1_4, [
+            ("In the house price example, how much does each additional bedroom add to the predicted price?", [
+                ("$18,000", False), ("$25,000", True), ("$120", False), ("$1,500", False)]),
+            ("What does the negative coefficient for \"age\" (-1,500) indicate?", [
+                ("Each additional year of age adds $1,500 to the price", False),
+                ("Each additional year of age reduces price by about $1,500", True),
+                ("Age has no effect on price", False), ("The model is invalid", False)]),
+            ("Why would you use standardised coefficients instead of raw coefficients?", [
+                ("To make coefficients comparable across variables with different units", True),
+                ("To make the model run faster", False),
+                ("To eliminate the need for confidence intervals", False), ("To increase R-squared", False)]),
+            ("What does a 95% confidence interval for a coefficient represent, per the lesson?", [
+                ("The coefficient is 95% likely to be exactly this value", False),
+                ("If the study were repeated 100 times, the true coefficient would fall in this range about 95 times", True),
+                ("95% of the data falls in this range", False), ("The model is 95% accurate", False)]),
+        ])
+        l3_1_5, _ = Lesson.objects.get_or_create(
             chapter=ch3_1,
             title='P-Value',
             defaults={
@@ -1259,7 +1715,22 @@ print(f"P-value: {model.pvalues[1]:.3f}")</code></pre>
 <p>Always report effect sizes alongside p-values for a complete picture.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l3_1_5, [
+            ("According to the lesson's table, what does a p-value less than 0.01 indicate?", [
+                ("No significant evidence", False), ("Weak evidence", False),
+                ("Strong evidence against the null hypothesis", True), ("Proof of causation", False)]),
+            ("What is the commonly used significance threshold mentioned in the lesson?", [
+                ("0.10", False), ("0.05", True), ("0.01", False), ("0.50", False)]),
+            ("Which of these statements about p-values is TRUE according to the lesson?", [
+                ("A p-value of 0.03 means there is a 97% chance the relationship is real", False),
+                ("A p-value tells you the size of the effect", False),
+                ("A small p-value does not prove the null hypothesis is false, only that there is evidence against it", True),
+                ("A p-value proves causation", False)]),
+            ("What does the lesson recommend reporting alongside p-values for a complete picture?", [
+                ("Only the sample size", False), ("Effect sizes", True),
+                ("The dataset's file format", False), ("The programming language used", False)]),
+        ])
+        l3_1_6, _ = Lesson.objects.get_or_create(
             chapter=ch3_1,
             title='R-Squared',
             defaults={
@@ -1291,7 +1762,20 @@ print(f"P-value: {model.pvalues[1]:.3f}")</code></pre>
 <p>A high R-squared doesn't guarantee a good model. Always check residual plots and assumptions alongside it.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l3_1_6, [
+            ("What does an R-squared value of 0.0 mean?", [
+                ("The model perfectly predicts the data", False), ("The model explains none of the variance", True),
+                ("The model has negative predictions", False), ("There was a calculation error", False)]),
+            ("What is SS_res in the R-squared formula?", [
+                ("Total sum of squares", False), ("Sum of squared residuals - unexplained variance", True),
+                ("The sample size", False), ("The correlation coefficient", False)]),
+            ("Why might adjusted R-squared be preferred over regular R-squared when comparing models?", [
+                ("It always increases with more variables", False), ("It penalises unnecessary variables", True),
+                ("It cannot be calculated for regression models", False), ("It ignores model complexity entirely", False)]),
+            ("An R-squared of 0.8 means the model explains what percentage of the variance?", [
+                ("20%", False), ("50%", False), ("80%", True), ("100%", False)]),
+        ])
+        l3_1_7, _ = Lesson.objects.get_or_create(
             chapter=ch3_1,
             title='Case Study: Predicting House Prices',
             defaults={
@@ -1336,6 +1820,20 @@ for feature, coef in zip(features, model.coef_):
 <p>An R² of 0.78 means the model explains 78% of the variance in house prices - a solid starting point, but there's room to improve with feature engineering or more complex models.</p>'''
             }
         )
+        self._add_quiz(l3_1_7, [
+            ("What test size is used in the lesson's train_test_split call?", [
+                ("0.1", False), ("0.2", True), ("0.3", False), ("0.5", False)]),
+            ("Which features are used to predict house prices in the case study?", [
+                ("sqft, bedrooms, bathrooms, age, garage", True), ("name, age, city", False),
+                ("date, price, name", False), ("hours_studied, exam_score", False)]),
+            ("In the interpretation step, what does a sqft coefficient of 150 mean?", [
+                ("Each additional square foot adds about $150 to the predicted price", True),
+                ("The house has 150 square feet", False),
+                ("The model's accuracy is 150%", False), ("150 houses were used in training", False)]),
+            ("What R² value is reported in the case study's example results, and what does it mean?", [
+                ("0.78 - the model explains 78% of the variance", True), ("1.0 - perfect prediction", False),
+                ("0.0 - no predictive power", False), ("78 - the number of features used", False)]),
+        ])
 
         # ──────────────────────────────────────────────
         # Course 4: Pandas for Data Science
@@ -1354,7 +1852,7 @@ for feature, coef in zip(features, model.coef_):
             title='Getting Started with Pandas',
             defaults={'order': 1, 'description': 'Core Pandas concepts and data structures'}
         )
-        Lesson.objects.get_or_create(
+        l4_1_1, _ = Lesson.objects.get_or_create(
             chapter=ch4_1,
             title='Pandas Intro',
             defaults={
@@ -1378,7 +1876,20 @@ import numpy as np</code></pre>
 <p>By convention, pandas is imported as <code>pd</code>. Almost every data science project starts with this import.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l4_1_1, [
+            ("By convention, Pandas is imported using which alias?", [
+                ("ps", False), ("pd", True), ("pandas", False), ("pn", False)]),
+            ("Which command installs Pandas via pip?", [
+                ("pip get pandas", False), ("pip install pandas", True),
+                ("pip add pandas", False), ("python -m pandas", False)]),
+            ("Which of the following is NOT listed in the lesson as something Pandas integrates with?", [
+                ("NumPy", False), ("Matplotlib", False), ("scikit-learn", False), ("TensorFlow", True)]),
+            ("What is one thing Pandas is described as being able to do?", [
+                ("Compile Python to machine code", False),
+                ("Load data from CSV, Excel, JSON, and SQL", True),
+                ("Render 3D graphics", False), ("Train neural networks natively", False)]),
+        ])
+        l4_1_2, _ = Lesson.objects.get_or_create(
             chapter=ch4_1,
             title='Getting Started',
             defaults={
@@ -1412,7 +1923,19 @@ df.describe()    # Statistics for numeric columns</code></pre>
 <p>Always inspect your data first - check shape, types, and missing values before any analysis.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l4_1_2, [
+            ("What are the two primary data structures in Pandas?", [
+                ("List and Dict", False), ("Series and DataFrame", True),
+                ("Array and Matrix", False), ("Table and Column", False)]),
+            ("What does df.shape return for a DataFrame with 4 rows and 3 columns?", [
+                ("12", False), ("(4, 3)", True), ("3", False), ("[4, 3, 3]", False)]),
+            ("Which method shows the first 5 rows of a DataFrame by default?", [
+                ("df.top()", False), ("df.head()", True), ("df.first()", False), ("df.preview()", False)]),
+            ("What does the lesson recommend checking before any analysis?", [
+                ("Only the column names", False), ("Shape, types, and missing values", True),
+                ("The file size only", False), ("The operating system version", False)]),
+        ])
+        l4_1_3, _ = Lesson.objects.get_or_create(
             chapter=ch4_1,
             title='Series',
             defaults={
@@ -1445,7 +1968,21 @@ prices.sort_values() # Sort ascending</code></pre>
 <p>A DataFrame is essentially a collection of Series objects sharing the same index.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l4_1_3, [
+            ("How is a Series best described?", [
+                ("A two-dimensional table", False), ("A one-dimensional labelled array", True),
+                ("A SQL table", False), ("A Python dictionary only", False)]),
+            ("In the custom index example, what does prices[\"jacket\"] return?", [
+                ("29.99", False), ("49.99", True), ("19.99", False), ("39.99", False)]),
+            ("What does prices[prices > 30] do?", [
+                ("Sorts prices ascending", False), ("Filters items over $30", True),
+                ("Returns the mean price", False), ("Removes all prices", False)]),
+            ("What is the relationship between a DataFrame and Series, per the lesson?", [
+                ("They are unrelated structures", False),
+                ("A DataFrame is a collection of Series sharing the same index", True),
+                ("A Series is a collection of DataFrames", False), ("A Series can only hold strings", False)]),
+        ])
+        l4_1_4, _ = Lesson.objects.get_or_create(
             chapter=ch4_1,
             title='DataFrames',
             defaults={
@@ -1484,6 +2021,20 @@ df = df.drop(columns=["value"])</code></pre>
 <pre><code>df.sort_values("price", ascending=False)</code></pre>'''
             }
         )
+        self._add_quiz(l4_1_4, [
+            ("Which syntax selects multiple columns from a DataFrame?", [
+                ("df[\"product\", \"price\"]", False), ("df[[\"product\", \"price\"]]", True),
+                ("df.columns(\"product\", \"price\")", False), ("df.select(\"product\", \"price\")", False)]),
+            ("What does df.iloc[1:3] select?", [
+                ("Columns 1 to 3", False), ("Rows 1 and 2", True),
+                ("Row 1 only", False), ("The last 3 rows", False)]),
+            ("How do you remove a column named \"value\" from a DataFrame?", [
+                ("df.delete(\"value\")", False), ("df = df.drop(columns=[\"value\"])", True),
+                ("del df.value", False), ("df.remove_column(\"value\")", False)]),
+            ("Which call sorts a DataFrame by the \"price\" column in descending order?", [
+                ("df.sort_values(\"price\")", False), ("df.sort_values(\"price\", ascending=False)", True),
+                ("df.order_by(\"price desc\")", False), ("df.sort(\"price\", desc=True)", False)]),
+        ])
 
         # Chapter 2: Working with Data
         ch4_2, _ = Chapter.objects.get_or_create(
@@ -1491,7 +2042,7 @@ df = df.drop(columns=["value"])</code></pre>
             title='Working with Data',
             defaults={'order': 2, 'description': 'Reading, analysing, and summarising data'}
         )
-        Lesson.objects.get_or_create(
+        l4_2_1, _ = Lesson.objects.get_or_create(
             chapter=ch4_2,
             title='Read CSV',
             defaults={
@@ -1524,7 +2075,19 @@ df = pd.read_csv("data.csv", parse_dates=["date_column"])</code></pre>
 <p>Always pass <code>index=False</code> when saving unless you need the row index in the file.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l4_2_1, [
+            ("Which parameter specifies a custom delimiter when reading a TSV file?", [
+                ("delimiter", False), ("sep", True), ("split", False), ("tab", False)]),
+            ("What does the na_values parameter do when reading a CSV?", [
+                ("Sets a default numeric value", False),
+                ("Specifies which strings should be treated as missing values", True),
+                ("Removes all NaN values automatically", False), ("Converts NaN to zero", False)]),
+            ("What does the lesson recommend passing to to_csv() unless you need the row index saved?", [
+                ("header=False", False), ("index=False", True), ("sep=\",\"", False), ("mode=\"w\"", False)]),
+            ("Which parameter automatically converts a column to datetime while reading a CSV?", [
+                ("parse_dates", True), ("to_datetime", False), ("date_format", False), ("convert_dates", False)]),
+        ])
+        l4_2_2, _ = Lesson.objects.get_or_create(
             chapter=ch4_2,
             title='Read JSON',
             defaults={
@@ -1555,7 +2118,21 @@ df = json_normalize(data, record_path="results", meta=["id", "timestamp"])</code
 <p>The <code>orient</code> parameter controls the JSON structure - <code>"records"</code> produces a list of objects, which is the most common format for APIs.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l4_2_2, [
+            ("Which Pandas function loads JSON data into a DataFrame?", [
+                ("pd.read_json()", True), ("pd.load_json()", False),
+                ("pd.from_json()", False), ("pd.json_to_df()", False)]),
+            ("What is json_normalize used for?", [
+                ("Converting DataFrames to JSON", False), ("Flattening nested JSON structures", True),
+                ("Removing missing values", False), ("Sorting JSON keys", False)]),
+            ("What does orient=\"records\" produce when writing JSON?", [
+                ("A single nested object", False), ("A list of objects", True),
+                ("A CSV file", False), ("A SQL table", False)]),
+            ("Why does the lesson say orient=\"records\" is the most common format?", [
+                ("It is the smallest file size", False), ("It is the most common format for APIs", True),
+                ("It is required by Pandas", False), ("It cannot contain missing values", False)]),
+        ])
+        l4_2_3, _ = Lesson.objects.get_or_create(
             chapter=ch4_2,
             title='Analyzing Data',
             defaults={
@@ -1589,6 +2166,20 @@ df[["sales", "returns", "discount"]].corr()</code></pre>
 <p>These operations help you understand your data before building any models.</p>'''
             }
         )
+        self._add_quiz(l4_2_3, [
+            ("Which method counts the occurrences of each unique value in a column?", [
+                ("df.count()", False), ("df[\"category\"].value_counts()", True),
+                ("df.tally()", False), ("df.unique_counts()", False)]),
+            ("What does df.groupby(\"category\")[\"sales\"].sum() compute?", [
+                ("The total sales per category", True), ("The average sales overall", False),
+                ("The number of categories", False), ("The correlation between sales and category", False)]),
+            ("What does pd.crosstab(df[\"region\"], df[\"category\"]) produce?", [
+                ("A correlation matrix", False), ("A frequency table between two variables", True),
+                ("A scatter plot", False), ("A single summary number", False)]),
+            ("What does df.describe() return for numeric columns?", [
+                ("count, mean, std, min, 25%, 50%, 75%, max", True), ("Only the column names", False),
+                ("A plot", False), ("The data types only", False)]),
+        ])
 
         # Chapter 3: Data Cleaning
         ch4_3, _ = Chapter.objects.get_or_create(
@@ -1596,7 +2187,7 @@ df[["sales", "returns", "discount"]].corr()</code></pre>
             title='Data Cleaning',
             defaults={'order': 3, 'description': 'Handling messy real-world data'}
         )
-        Lesson.objects.get_or_create(
+        l4_3_1, _ = Lesson.objects.get_or_create(
             chapter=ch4_3,
             title='Cleaning Empty Cells',
             defaults={
@@ -1632,7 +2223,21 @@ df.fillna(method="ffill")         # Forward-fill (use previous row's value)</cod
 </ul>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l4_3_1, [
+            ("What does Pandas use to represent missing values?", [
+                ("None only", False), ("NaN", True), ("-1", False), ("An empty string only", False)]),
+            ("What does df.dropna(subset=[\"age\"]) do?", [
+                ("Drops all rows regardless of column", False), ("Drops rows only where \"age\" is NaN", True),
+                ("Fills \"age\" with zero", False), ("Removes the \"age\" column entirely", False)]),
+            ("Which fillna approach is recommended for time-series data where order matters?", [
+                ("Drop rows", False), ("Fill with a fixed value", False),
+                ("Forward/backward fill", True), ("Fill with an unrelated column", False)]),
+            ("According to the lesson, when is dropping rows with missing data appropriate?", [
+                ("Always, regardless of amount", False),
+                ("When missing data is minimal (<5%) and random", True),
+                ("Only for numeric columns", False), ("Never", False)]),
+        ])
+        l4_3_2, _ = Lesson.objects.get_or_create(
             chapter=ch4_3,
             title='Cleaning Wrong Format',
             defaults={
@@ -1666,7 +2271,23 @@ df["status"] = df["status"].replace({"Y": "Yes", "N": "No", "n/a": "Unknown"})</
 <p>Always check <code>df.dtypes</code> after loading data - wrong types cause silent errors in analysis.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l4_3_2, [
+            ("What does df[\"price\"].str.replace(\"$\", \"\").astype(float) accomplish?", [
+                ("Removes rows with dollar signs", False),
+                ("Strips the currency symbol and converts to a float", True),
+                ("Converts float to string", False), ("Rounds prices to 2 decimals", False)]),
+            ("What does format=\"mixed\" handle when parsing dates?", [
+                ("Multiple currencies in one column", False),
+                ("Dates with varying formats in the same column", True),
+                ("Mixed data types in a column", False), ("Duplicate date entries", False)]),
+            ("What does str.title() do to a text column?", [
+                ("Converts to lowercase", False), ("Converts to uppercase", False),
+                ("Converts to title case", True), ("Removes whitespace only", False)]),
+            ("What should you always check after loading data, per the lesson?", [
+                ("df.dtypes", True), ("df.shape only", False),
+                ("The file's creation date", False), ("The number of columns only", False)]),
+        ])
+        l4_3_3, _ = Lesson.objects.get_or_create(
             chapter=ch4_3,
             title='Cleaning Wrong Data',
             defaults={
@@ -1702,7 +2323,21 @@ df.loc[df["score"] < 0, "score"] = 0</code></pre>
 <p>Domain knowledge matters - what counts as "wrong" depends on context. An age of 150 is impossible, but a salary of $0 might be valid (unpaid internship).</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l4_3_3, [
+            ("In the lesson's example dataset [25, 30, 35, 200, 28, -5, 40], which values are flagged as outliers using IQR?", [
+                ("25 and 30", False), ("200 and -5", True), ("35 and 40", False), ("28 only", False)]),
+            ("What does df.loc[df[\"age\"] < 0, \"age\"] = df[\"age\"].median() do?", [
+                ("Deletes all negative ages", False), ("Replaces negative ages with the median age", True),
+                ("Converts negative ages to positive", False), ("Raises an error", False)]),
+            ("What kind of check does df[df[\"start_date\"] > df[\"end_date\"]] perform?", [
+                ("Missing value detection", False), ("Logical validation of date ordering", True),
+                ("Duplicate detection", False), ("Outlier detection", False)]),
+            ("According to the lesson, why does \"wrong\" data depend on context?", [
+                ("It never depends on context", False),
+                ("Because a salary of $0 might be valid but an age of 150 is impossible", True),
+                ("Because Pandas defines it universally", False), ("Because all outliers are always wrong", False)]),
+        ])
+        l4_3_4, _ = Lesson.objects.get_or_create(
             chapter=ch4_3,
             title='Removing Duplicates',
             defaults={
@@ -1742,6 +2377,21 @@ print(f"Duplicates: {df.duplicated().sum()}")
 print(f"Rows after: {len(df.drop_duplicates())}")</code></pre>'''
             }
         )
+        self._add_quiz(l4_3_4, [
+            ("What does df.duplicated().sum() return?", [
+                ("The total number of rows", False), ("The count of duplicate rows", True),
+                ("The number of columns", False), ("The sum of all values", False)]),
+            ("What does df.drop_duplicates(subset=[\"name\"], keep=\"last\") do?", [
+                ("Keeps the first occurrence of each name", False),
+                ("Keeps the last occurrence of each duplicate name", True),
+                ("Removes all rows with that name", False), ("Removes the \"name\" column", False)]),
+            ("According to the lesson, what should you do before removing partial duplicates?", [
+                ("Remove them immediately", False), ("Investigate whether they are legitimate records", True),
+                ("Ignore them entirely", False), ("Convert them to NaN", False)]),
+            ("What does drop_duplicates() do by default when it finds a duplicate row?", [
+                ("Removes both occurrences", False), ("Keeps the first occurrence and removes later ones", True),
+                ("Keeps the last occurrence only", False), ("Merges the rows", False)]),
+        ])
 
         # Chapter 4: Analysis & Visualization
         ch4_4, _ = Chapter.objects.get_or_create(
@@ -1749,7 +2399,7 @@ print(f"Rows after: {len(df.drop_duplicates())}")</code></pre>'''
             title='Analysis & Visualization',
             defaults={'order': 4, 'description': 'Finding patterns and visualising data'}
         )
-        Lesson.objects.get_or_create(
+        l4_4_1, _ = Lesson.objects.get_or_create(
             chapter=ch4_4,
             title='Correlations',
             defaults={
@@ -1789,7 +2439,21 @@ plt.show()</code></pre>
 <p>Strong correlations (close to +1 or -1) suggest relationships worth investigating further - but remember, correlation is not causation.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l4_4_1, [
+            ("In the lesson's example, what is the correlation between exam_score and anxiety?", [
+                ("0.994", False), ("0.312", False), ("-0.994", True), ("1.000", False)]),
+            ("What does df.corr()[\"exam_score\"].sort_values(ascending=False) produce?", [
+                ("A random ordering of correlations", False),
+                ("Correlations with exam_score, sorted from highest to lowest", True),
+                ("Only positive correlations", False), ("The mean exam score", False)]),
+            ("Which Seaborn function is used to visualise the correlation matrix?", [
+                ("sns.heatmap()", True), ("sns.corrplot()", False),
+                ("sns.matrix()", False), ("sns.pairplot()", False)]),
+            ("What caveat does the lesson repeat about strong correlations?", [
+                ("They always indicate causation", False), ("Correlation is not causation", True),
+                ("They only apply to numeric data", False), ("They must be visualised to be valid", False)]),
+        ])
+        l4_4_2, _ = Lesson.objects.get_or_create(
             chapter=ch4_4,
             title='Plotting',
             defaults={
@@ -1826,6 +2490,18 @@ plt.show()</code></pre>
 <p>For publication-quality charts, use Matplotlib or Seaborn directly. Pandas plotting is best for quick exploration.</p>'''
             }
         )
+        self._add_quiz(l4_4_2, [
+            ("Which kind argument creates a bar chart using df.plot()?", [
+                ("kind=\"line\"", False), ("kind=\"bar\"", True), ("kind=\"hist\"", False), ("kind=\"scatter\"", False)]),
+            ("What does df[\"age\"].plot(kind=\"hist\", bins=20) create?", [
+                ("A scatter plot", False), ("A histogram with 20 bins", True),
+                ("A line chart", False), ("A pie chart", False)]),
+            ("According to the lesson, when should you use Matplotlib or Seaborn directly instead of Pandas plotting?", [
+                ("Never", False), ("For publication-quality charts", True),
+                ("Only for line charts", False), ("Pandas plotting should always be used instead", False)]),
+            ("What is Pandas' built-in plotting powered by?", [
+                ("Seaborn", False), ("Matplotlib", True), ("Plotly", False), ("Bokeh", False)]),
+        ])
 
         # ──────────────────────────────────────────────
         # Course 5: Matplotlib for Data Visualization
@@ -1844,7 +2520,7 @@ plt.show()</code></pre>
             title='Getting Started',
             defaults={'order': 1, 'description': 'Fundamentals of Matplotlib'}
         )
-        Lesson.objects.get_or_create(
+        l5_1_1, _ = Lesson.objects.get_or_create(
             chapter=ch5_1,
             title='Matplotlib Intro',
             defaults={
@@ -1876,7 +2552,20 @@ plt.show()</code></pre>
 <p>The <code>pyplot</code> interface (<code>plt</code>) is the most common way to use Matplotlib - it provides a MATLAB-like experience.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l5_1_1, [
+            ("Which command installs Matplotlib via pip?", [
+                ("pip install matplotlib", True), ("pip get matplotlib", False),
+                ("pip add-plot", False), ("conda install only", False)]),
+            ("What style of experience does the pyplot interface provide, per the lesson?", [
+                ("A MATLAB-like experience", True), ("A pure object-oriented experience", False),
+                ("A database query experience", False), ("A markup language experience", False)]),
+            ("What is Matplotlib described as being the foundation for?", [
+                ("Pandas", False), ("NumPy", False),
+                ("Higher-level libraries like Seaborn", True), ("Scikit-learn", False)]),
+            ("In the quick example, which function sets the plot's x-axis label?", [
+                ("plt.title()", False), ("plt.xlabel()", True), ("plt.ylabel()", False), ("plt.label()", False)]),
+        ])
+        l5_1_2, _ = Lesson.objects.get_or_create(
             chapter=ch5_1,
             title='Get Started',
             defaults={
@@ -1919,7 +2608,23 @@ plt.show()</code></pre>
 <p>Use the <code>fig, ax</code> interface (object-oriented) for complex plots - it gives you explicit control over which plot you're modifying.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l5_1_2, [
+            ("What is the difference between a Figure and Axes in Matplotlib?", [
+                ("They are the same thing", False),
+                ("A Figure is the entire canvas; Axes is a single plot within it", True),
+                ("Axes is bigger than the Figure", False), ("A Figure can only contain one Axes", False)]),
+            ("Which function creates a figure with 1 row and 2 columns of subplots?", [
+                ("plt.subplots(1, 2)", True), ("plt.figure(1, 2)", False),
+                ("plt.axes(1, 2)", False), ("plt.grid(1, 2)", False)]),
+            ("What interface does the lesson recommend for complex plots requiring explicit control?", [
+                ("The pyplot state-machine interface", False),
+                ("The object-oriented fig, ax interface", True),
+                ("The pandas plotting interface", False), ("The seaborn interface", False)]),
+            ("What is step 1 of the \"basic workflow\" described in the lesson?", [
+                ("Display the plot", False), ("Customise the axes", False),
+                ("Create figure and axes", True), ("Plot the data", False)]),
+        ])
+        l5_1_3, _ = Lesson.objects.get_or_create(
             chapter=ch5_1,
             title='Pyplot',
             defaults={
@@ -1951,7 +2656,20 @@ plt.show()                     # Display</code></pre>
 <p>Pyplot is great for quick plots. For production code, prefer the object-oriented <code>fig, ax</code> interface.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l5_1_3, [
+            ("What does the format string \"ro-\" mean?", [
+                ("Blue dashed line", False), ("Red, circle markers, solid line", True),
+                ("Green dotted line", False), ("Black square markers", False)]),
+            ("Which function saves a plot to a file?", [
+                ("plt.export()", False), ("plt.savefig()", True), ("plt.save()", False), ("plt.write()", False)]),
+            ("What does the format string \"g--\" represent?", [
+                ("Green dashed line", True), ("Grey solid line", False),
+                ("Gold dotted line", False), ("Green solid line", False)]),
+            ("According to the lesson, when is pyplot best suited versus the object-oriented interface?", [
+                ("For production code", False), ("For quick plots", True),
+                ("Never, pyplot should be avoided", False), ("Only for 3D plots", False)]),
+        ])
+        l5_1_4, _ = Lesson.objects.get_or_create(
             chapter=ch5_1,
             title='Plotting',
             defaults={
@@ -1991,6 +2709,18 @@ plt.show()</code></pre>
 <p>Choose the right chart for your data: line for trends, bar for comparisons, histogram for distributions.</p>'''
             }
         )
+        self._add_quiz(l5_1_4, [
+            ("Which chart type does the lesson recommend for showing trends over time?", [
+                ("Bar chart", False), ("Line plot", True), ("Pie chart", False), ("Histogram", False)]),
+            ("In the bar chart example, which language has the highest popularity score?", [
+                ("R", False), ("SQL", False), ("Python", True), ("Julia", False)]),
+            ("Which function is used to shade the area under a line plot in the revenue example?", [
+                ("plt.shade()", False), ("plt.fill_between()", True),
+                ("plt.area()", False), ("plt.fill_under()", False)]),
+            ("What does the lesson recommend for visualising a distribution of a numeric variable?", [
+                ("A histogram", True), ("A pie chart", False),
+                ("A bar chart", False), ("A scatter plot only", False)]),
+        ])
 
         # Chapter 2: Styling Plots
         ch5_2, _ = Chapter.objects.get_or_create(
@@ -1998,7 +2728,7 @@ plt.show()</code></pre>
             title='Styling Plots',
             defaults={'order': 2, 'description': 'Customising the look of your charts'}
         )
-        Lesson.objects.get_or_create(
+        l5_2_1, _ = Lesson.objects.get_or_create(
             chapter=ch5_2,
             title='Markers',
             defaults={
@@ -2042,7 +2772,18 @@ plt.show()</code></pre>
 </table>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l5_2_1, [
+            ("What marker shape does the code \"s\" represent, per the lesson's table?", [
+                ("Circle", False), ("Square", True), ("Triangle up", False), ("Diamond", False)]),
+            ("Which parameter controls the fill colour of a marker?", [
+                ("markeredgecolor", False), ("markerfacecolor", True), ("markersize", False), ("color", False)]),
+            ("What marker code represents a triangle pointing up?", [
+                ("o", False), ("s", False), ("^", True), ("D", False)]),
+            ("Where are markers especially useful, according to the lesson?", [
+                ("Pie charts only", False), ("Scatter plots and line plots with sparse data", True),
+                ("Bar charts only", False), ("Heatmaps", False)]),
+        ])
+        l5_2_2, _ = Lesson.objects.get_or_create(
             chapter=ch5_2,
             title='Line',
             defaults={
@@ -2080,7 +2821,19 @@ plt.plot(x, y2, color="crimson", linewidth=1.5)</code></pre>
 <p>Use different line styles to distinguish multiple series, especially when printing in black and white.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l5_2_2, [
+            ("Which linestyle code represents a dashed line?", [
+                ("-", False), ("--", True), (":", False), ("-.", False)]),
+            ("What does the alpha parameter control when styling a line?", [
+                ("Line width", False), ("Transparency", True), ("Marker size", False), ("Color hue", False)]),
+            ("What does the linestyle code \"-.\" represent?", [
+                ("Solid", False), ("Dashed", False), ("Dotted", False), ("Dash-dot", True)]),
+            ("Why does the lesson recommend using different line styles for multiple series?", [
+                ("To increase file size", False),
+                ("To distinguish series, especially in black and white printing", True),
+                ("It is required by Matplotlib", False), ("To slow down rendering", False)]),
+        ])
+        l5_2_3, _ = Lesson.objects.get_or_create(
             chapter=ch5_2,
             title='Labels',
             defaults={
@@ -2118,7 +2871,20 @@ plt.xticks(rotation=45, ha="right")</code></pre>
 <p>Good labels answer: What is being measured? What are the units? What time period?</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l5_2_3, [
+            ("Which method adds an arrow annotation pointing to a specific data point?", [
+                ("ax.text()", False), ("ax.annotate()", True), ("ax.label()", False), ("ax.point()", False)]),
+            ("What does plt.xticks(rotation=45, ha=\"right\") help with?", [
+                ("Changing plot colours", False), ("Preventing overlapping x-axis labels", True),
+                ("Adding a legend", False), ("Setting the figure size", False)]),
+            ("What three things should good labels answer, according to the lesson?", [
+                ("What is measured, what are the units, what time period", True),
+                ("Who made the chart, when, and why", False),
+                ("The file name, size, and format", False), ("The programming language and version", False)]),
+            ("Which parameter controls where the legend appears on the plot?", [
+                ("loc", True), ("position", False), ("place", False), ("anchor", False)]),
+        ])
+        l5_2_4, _ = Lesson.objects.get_or_create(
             chapter=ch5_2,
             title='Grid',
             defaults={
@@ -2158,6 +2924,19 @@ ax.grid(True, linestyle="--", alpha=0.3)</code></pre>
 <p>Use subtle grids - thick, dark lines compete with the data. Light dashed lines are the standard.</p>'''
             }
         )
+        self._add_quiz(l5_2_4, [
+            ("What does ax.set_axisbelow(True) accomplish?", [
+                ("Hides the grid", False), ("Draws the grid behind the plotted data", True),
+                ("Removes the axis labels", False), ("Makes the grid bold", False)]),
+            ("Which parameter restricts grid lines to horizontal only?", [
+                ("axis=\"x\"", False), ("axis=\"y\"", True), ("axis=\"both\"", False), ("axis=\"horizontal\"", False)]),
+            ("What style of grid lines does the lesson recommend as the standard?", [
+                ("Thick, dark solid lines", False), ("Light dashed lines", True),
+                ("No grid at all", False), ("Bright red lines", False)]),
+            ("What does plt.grid(True) do?", [
+                ("Removes the grid", False), ("Displays grid lines on the plot", True),
+                ("Changes the plot colour", False), ("Adds a legend", False)]),
+        ])
 
         # Chapter 3: Chart Types
         ch5_3, _ = Chapter.objects.get_or_create(
@@ -2165,7 +2944,7 @@ ax.grid(True, linestyle="--", alpha=0.3)</code></pre>
             title='Chart Types',
             defaults={'order': 3, 'description': 'Different chart types for different data'}
         )
-        Lesson.objects.get_or_create(
+        l5_3_1, _ = Lesson.objects.get_or_create(
             chapter=ch5_3,
             title='Subplot',
             defaults={
@@ -2210,7 +2989,21 @@ ax2 = fig.add_subplot(gs[1])
 ax3 = fig.add_subplot(gs[2])</code></pre>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l5_3_1, [
+            ("What does plt.subplots(2, 2, figsize=(10, 8)) create?", [
+                ("A single plot", False), ("A 2x2 grid of subplots", True),
+                ("2 separate figures", False), ("A 4x4 grid", False)]),
+            ("What does sharey=True do when creating subplots?", [
+                ("Shares the x-axis across subplots", False),
+                ("Shares the y-axis across subplots for easy comparison", True),
+                ("Merges the subplots into one", False), ("Hides the y-axis", False)]),
+            ("Which module allows creating subplots with unequal sizes using width_ratios?", [
+                ("matplotlib.gridspec", True), ("matplotlib.axes", False),
+                ("matplotlib.figure", False), ("matplotlib.style", False)]),
+            ("In the lesson's 2x2 example, which chart type appears in the bottom-right subplot?", [
+                ("Line plot", False), ("Bar chart", False), ("Scatter plot", False), ("Histogram", True)]),
+        ])
+        l5_3_2, _ = Lesson.objects.get_or_create(
             chapter=ch5_3,
             title='Scatter',
             defaults={
@@ -2250,7 +3043,20 @@ plt.show()</code></pre>
 <p>Scatter plots are your go-to for exploring correlations and spotting outliers.</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l5_3_2, [
+            ("What does each point in a scatter plot represent?", [
+                ("A category label", False), ("One observation, positioned by two variable values", True),
+                ("The mean of the dataset", False), ("A regression line", False)]),
+            ("In the bubble chart example, what does the s parameter control?", [
+                ("The colour of points", False), ("The size of each point", True),
+                ("The shape of markers", False), ("The transparency", False)]),
+            ("What is a scatter plot most useful for, per the lesson?", [
+                ("Showing proportions of a whole", False), ("Exploring correlations and spotting outliers", True),
+                ("Displaying time-series trends only", False), ("Comparing categorical counts", False)]),
+            ("In the \"coloured by category\" example, how many categories are used?", [
+                ("2", False), ("3", True), ("4", False), ("5", False)]),
+        ])
+        l5_3_3, _ = Lesson.objects.get_or_create(
             chapter=ch5_3,
             title='Bars',
             defaults={
@@ -2295,7 +3101,18 @@ plt.legend()
 plt.show()</code></pre>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l5_3_3, [
+            ("Which function creates a horizontal bar chart?", [
+                ("plt.bar()", False), ("plt.barh()", True), ("plt.hbar()", False), ("plt.rowbar()", False)]),
+            ("In a grouped bar chart, how are bars offset so they sit side by side?", [
+                ("Using width and x - width/2 / x + width/2 offsets", True), ("Using alpha", False),
+                ("Using bottom", False), ("Using edgecolor", False)]),
+            ("Which parameter creates a stacked bar chart by placing one bar on top of another?", [
+                ("width", False), ("bottom", True), ("stack=True", False), ("offset", False)]),
+            ("What is the highest score in the lesson's language popularity bar chart example?", [
+                ("Python at 92", True), ("R at 78", False), ("SQL at 85", False), ("Java at 60", False)]),
+        ])
+        l5_3_4, _ = Lesson.objects.get_or_create(
             chapter=ch5_3,
             title='Histograms',
             defaults={
@@ -2339,7 +3156,22 @@ plt.show()</code></pre>
 <p>Histograms are essential for understanding your data's shape: is it symmetric? Skewed? Are there gaps or outliers?</p>'''
             }
         )
-        Lesson.objects.get_or_create(
+        self._add_quiz(l5_3_4, [
+            ("What does increasing the number of bins in a histogram generally do?", [
+                ("Smooths the distribution", False), ("Shows more detail", True),
+                ("Removes outliers", False), ("Changes the data values", False)]),
+            ("Which parameter allows two overlapping histograms to both be visible?", [
+                ("bins", False), ("alpha (transparency)", True), ("edgecolor", False), ("density", False)]),
+            ("What three questions does the lesson say histograms help answer about data shape?", [
+                ("Is it symmetric, skewed, and are there gaps or outliers", True),
+                ("What is the mean, median, and mode", False),
+                ("What is the sample size, source, and format", False),
+                ("What colour, size, and shape to use", False)]),
+            ("In the lesson's basic example, what distribution is used to generate the sample data?", [
+                ("Uniform distribution", False), ("Normal distribution", True),
+                ("Binomial distribution", False), ("Poisson distribution", False)]),
+        ])
+        l5_3_5, _ = Lesson.objects.get_or_create(
             chapter=ch5_3,
             title='Pie Charts',
             defaults={
@@ -2383,15 +3215,27 @@ plt.show()</code></pre>
 <p>Avoid pie charts when you have many categories or when categories have similar values - bar charts are easier to read in those cases.</p>'''
             }
         )
+        self._add_quiz(l5_3_5, [
+            ("What does the explode parameter do in a pie chart?", [
+                ("Removes a slice", False), ("Slightly separates a slice from the rest", True),
+                ("Changes slice colours", False), ("Adds a legend", False)]),
+            ("How is a donut chart created from a pie chart, per the lesson?", [
+                ("By adding a white circle in the centre", True), ("By using plt.donut()", False),
+                ("By setting explode=1", False), ("By using bar charts instead", False)]),
+            ("According to the lesson, when should pie charts be avoided?", [
+                ("When there are many categories or similar values", True), ("When there are only 2 categories", False),
+                ("Always", False), ("When using Matplotlib", False)]),
+            ("What does autopct=\"%1.1f%%\" display on the pie chart?", [
+                ("The category names only", False), ("The percentage value of each slice", True),
+                ("The raw counts", False), ("The colour codes", False)]),
+        ])
 
         self.stdout.write(self.style.SUCCESS(f'Successfully seeded {Course.objects.count()} courses'))
         self.stdout.write(self.style.SUCCESS(f'Total chapters: {Chapter.objects.count()}'))
         self.stdout.write(self.style.SUCCESS(f'Total lessons: {Lesson.objects.count()}'))
-        self.stdout.write(self.style.SUCCESS('\nLogin credentials:'))
-        self.stdout.write(self.style.SUCCESS('  Instructor: instructor / instructor123'))
-        self.stdout.write(self.style.SUCCESS('  Student: student / student123'))
-        self.stdout.write(self.style.SUCCESS(f'Total chapters: {Chapter.objects.count()}'))
-        self.stdout.write(self.style.SUCCESS(f'Total lessons: {Lesson.objects.count()}'))
+        self.stdout.write(self.style.SUCCESS(f'Total quizzes: {Quiz.objects.count()}'))
+        self.stdout.write(self.style.SUCCESS(f'Total questions: {Question.objects.count()}'))
+        self.stdout.write(self.style.SUCCESS(f'Total choices: {Choice.objects.count()}'))
         self.stdout.write(self.style.SUCCESS('\nLogin credentials:'))
         self.stdout.write(self.style.SUCCESS('  Instructor: instructor / instructor123'))
         self.stdout.write(self.style.SUCCESS('  Student: student / student123'))
