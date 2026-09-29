@@ -729,6 +729,7 @@ by_length = sorted(words, key=lambda w: len(w))
 <p>If you're a scientist or engineer, you can get a lot done without OOP, but that doesn't mean you should ignore it. OOP makes it easy to simulate many objects at a time, such as a flock of birds, a network of power plants, or a cluster of galaxies. It's also important when things that are manipulated, like a GUI button or window, must persist for a long time in the computer's memory.</p>
 <p>Since it's easier to demonstrate OOP than it is to talk about it, let's look at an example using a Dungeons and Dragons–type board game in which players can be different characters, such as dwarves, elves, and wizards. These games use character cards to list important information for each character type. If you let your playing piece represent a dwarf, it inherits the characteristics on the card.</p>
 <h3>The Dwarf and Elf Classes</h3>
+<img src="/media/lesson_images/dwarf_character_card.png" alt="A dwarf character card from a role-playing board game, listing Attack, Defend, Move, and Body Points values" style="max-width: 320px;" />
 <p>The following code reproduces board game–style play, letting you create virtual cards for a dwarf and an elf, name your characters, and have them fight. The outcome of the fight will impact one of the character's body points, which represents the character's health. Be sure to note how OOP allows you to easily create many identical objects — in this case, dwarves or elves — by "stamping" them out of the predefined template, called a class.</p>
 <pre><code>import random
 
@@ -742,6 +743,8 @@ class Dwarf(object):
 
     def talk(self):
         print("I'm a blade-man, I'll cut ya!!!")</code></pre>
+<p>Here's the same code annotated with key components we'll discuss below:</p>
+<img src="/media/lesson_images/dwarf_class_annotated.png" alt="Annotated code for the Dwarf class: class definition, initialization method, instance attributes, and instance method labeled" style="max-width: 100%;" />
 <p>We started by importing <code>random</code> to simulate rolling a die; this is how your character will fight. Then we defined a class for a <em>Dwarf</em> character, capitalizing the first letter of the class name, and passed it an <code>object</code> argument. This <code>object</code> argument represents the <em>base class</em> of all types in Python.</p>
 <p><strong>TIP:</strong> Because <code>object</code> is the default parameter, you don't have to state it explicitly when defining a class. It's used here for clarity.</p>
 <p>As mentioned previously, a class is a template for creating objects of a <em>certain type</em>. For example, when you create a list or dictionary in Python, you are creating them from a class.</p>
@@ -895,6 +898,7 @@ print(square_it(3))</code></pre>
 <p>If decorators make your head spin a little, don't worry. If you can type <code>@dataclass</code>, you can use dataclasses. This decorator modifies regular Python classes so that you can define them using shorter and sweeter syntax.</p>
 <h3>Demonstrating Dataclasses</h3>
 <p>To see the benefits of dataclasses, let's define a <em>regular</em> class and then repeat the exercise using a <em>dataclass</em>. Our goal will be to make generic ship objects that we can track on a simulation grid. For each ship, we'll need to supply a name, a classification (like "frigate"), a country of registry, and a location.</p>
+<img src="/media/lesson_images/ship_frigate_photo.png" alt="A Brazilian Tamandare-class frigate at sea" style="max-width: 100%;" />
 <h3>Defining Ship as a Regular Class</h3>
 <p>To define a regular class called <code>Ship</code>, in a text editor, enter the following and then save it as <em>ship_tracker.py</em>:</p>
 <pre><code>class Ship:
@@ -955,6 +959,7 @@ class Ship:
 ticonderoga = Ship('Ticonderoga', 'destroyer', 'USA', (5, 10))
 kobayashi = Ship('Kobayashi', 'maru', 'Federation', (10, 22))</code></pre>
 <p>If you're working in an IDE, such as Spyder, as soon as you begin entering the <code>Ship()</code> class arguments, a window should appear, prompting you on the proper inputs.</p>
+<img src="/media/lesson_images/spyder_popup_screenshot.png" alt="Spyder text editor input pop-up showing the Ship class's expected arguments as you type" style="max-width: 100%;" />
 <p>Because classes you create are legitimate datatypes in Python, they behave like built-in datatypes. As a result, IDEs like Spyder will use the type hints to guide you when creating the ship objects.</p>
 <p>It's also worth noting that you don't need to use the correct data type for a parameter. Because Python is a <em>dynamically typed language</em> (meaning that variable types are <em>inferred</em> at runtime, not at compile-time, based on the value assigned) you can assign an integer as the classification argument, and the program will still run.</p>
 <p><strong>TIP:</strong> Even though the Python interpreter ignores type hints, you can use third-party static type-checking tools, like Mypy, to analyze your code and check for errors before the program runs.</p>
