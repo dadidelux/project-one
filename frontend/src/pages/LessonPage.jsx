@@ -4,6 +4,7 @@ import api, { progressAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
+import LessonContentAccordion from '../components/LessonContentAccordion';
 
 export default function LessonPage() {
   const { courseId, chapterId, lessonId } = useParams();
@@ -79,7 +80,7 @@ export default function LessonPage() {
   const nextLesson = currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-4">
         <button
           onClick={() => navigate(`/courses/${courseId}`)}
@@ -96,13 +97,11 @@ export default function LessonPage() {
         </div>
 
         <div className="px-8 py-8">
-          <div className="prose prose-lg max-w-none">
-            {lesson.content ? (
-              <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
-            ) : (
-              <p className="text-gray-500 italic">No content for this lesson yet.</p>
-            )}
-          </div>
+          {lesson.content ? (
+            <LessonContentAccordion content={lesson.content} />
+          ) : (
+            <p className="text-gray-500 italic">No content for this lesson yet.</p>
+          )}
         </div>
 
         <div className="px-8 py-6 border-t bg-gray-50 flex items-center justify-between">
