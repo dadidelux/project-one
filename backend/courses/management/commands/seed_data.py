@@ -1111,21 +1111,24 @@ class ShipSlots:
             ("What decorator eliminates boilerplate by auto-generating __init__, __repr__, and __eq__?", [
                 ("@property", False), ("@dataclass", True),
                 ("@staticmethod", False), ("@classmethod", False)]),
-            ("In the Counter example, why does Counter.count end up as 2 after creating two instances?", [
-                ("count is a class attribute shared across instances, incremented each time", True),
-                ("Each instance has its own separate count starting at 0", False),
-                ("id is a class attribute", False), ("Python resets counters automatically", False)]),
+            ("In the Elf class example, what makes pointed_ears different from attributes like name and attack?", [
+                ("It's a class attribute, defined at the class level and shared by every elf", True),
+                ("It's set inside __init__ like the other attributes", False),
+                ("It only exists on the Elden subclass, not the base Elf class", False),
+                ("It stores a reference to a method, not a value", False)]),
             ("According to the lesson, dataclasses were introduced in which Python version?", [
                 ("Python 2.7", False), ("Python 3.0", False),
                 ("Python 3.7+", True), ("Python 3.10+", False)]),
-            ("Why does the Experiment dataclass use field(default_factory=list) for results?", [
-                ("To avoid the mutable default value being shared across instances", True),
-                ("Because lists cannot have default values", False),
-                ("To make the field immutable", False), ("It has no real purpose, just style", False)]),
-            ("Which use case does the lesson recommend a dataclass for?", [
-                ("Complex logic and inheritance hierarchies", False),
-                ("Data containers, config, and DTOs", True),
-                ("Only mathematical functions", False), ("Database migrations", False)]),
+            ("In the Ship allegiance example, why is the friendly attribute defined with field(init=False)?", [
+                ("Because its value is computed in __post_init__ from the registry attribute, not passed in when creating the object", True),
+                ("Because Boolean fields can't have default values", False),
+                ("To make the attribute immutable once set", False),
+                ("Because __slots__ requires every field to declare init=False", False)]),
+            ("According to the lesson, what's the main criticism of using super()?", [
+                ("It makes code less explicit, which violates \"Explicit is better than implicit\"", True),
+                ("It doesn't work with single inheritance", False),
+                ("It can't be used to override a method", False),
+                ("It permanently changes the base class it's called on", False)]),
         ])
         l1_3_2, _ = Lesson.objects.get_or_create(
             chapter=ch1_3,
