@@ -719,110 +719,392 @@ by_length = sorted(words, key=lambda w: len(w))
                 'order': 1,
                 'is_free': True,
                 'content': '''<h2>Classes and Dataclasses</h2>
-<p>Classes are the building blocks of object-oriented programming in Python. They let you bundle data and behaviour into a single, reusable unit — essential when your data science projects grow beyond simple scripts.</p>
-<h3>Why Classes Matter in Data Science</h3>
-<ul>
-<li><strong>Organise related data and functions</strong> — a <code>DataPipeline</code> class can hold config, cleaning steps, and output in one place</li>
-<li><strong>Reusable components</strong> — build a <code>Model</code> base class and extend it for different algorithms</li>
-<li><strong>Cleaner APIs</strong> — scikit-learn's fit/predict interface is built on classes</li>
-</ul>
-<h3>Defining a Class</h3>
-<pre><code>class Student:
-    def __init__(self, name: str, grade: float):
+<h3>A Brief Introduction to Classes and OOP</h3>
+<p>Object-oriented programming (OOP) is a language model that reduces code duplication and makes code easier to update, maintain, and reuse. As a result, most commercial software is now built using OOP.</p>
+<p>Whereas procedural programming is built around actions and logic, OOP is built around data structures, known as objects, that consist of data and functions (called methods) that act on the data. Objects are built from classes, which are like blueprints for the objects.</p>
+<p>A class is a data type, and when you create an object of that data type, it is also known as an instance of that class. The process of setting the initial values and behaviors of the instance is called instantiation.</p>
+<p>As instances of a class, objects allow you to create multiple copies with the same structure but potentially different data. For example, if you're building a space combat game, you can conveniently bundle the attributes of a certain spaceship, like its size, speed, and armament, with the methods that control its flight and weapons operation. Then, when you create a new spaceship of that type, you only need to worry about giving it a unique name.</p>
+<p>Because Python is an object-oriented programming language, you've already been using objects and methods defined by other people. But unlike languages such as Java, Python doesn't force you to use OOP for your programs. It provides ways to encapsulate and separate abstraction layers using other approaches such as procedural or functional programming.</p>
+<p>Having this choice is important. If you implement OOP in small programs, most of them will feel over-engineered. To paraphrase computer scientist Joe Armstrong, "The problem with object-oriented languages is they've got all this implicit environment that they carry around with them. You wanted a banana, but what you got was a gorilla holding the banana and the whole damn jungle!"</p>
+<p>If you're a scientist or engineer, you can get a lot done without OOP, but that doesn't mean you should ignore it. OOP makes it easy to simulate many objects at a time, such as a flock of birds, a network of power plants, or a cluster of galaxies. It's also important when things that are manipulated, like a GUI button or window, must persist for a long time in the computer's memory.</p>
+<p>Since it's easier to demonstrate OOP than it is to talk about it, let's look at an example using a Dungeons and Dragons–type board game in which players can be different characters, such as dwarves, elves, and wizards. These games use character cards to list important information for each character type. If you let your playing piece represent a dwarf, it inherits the characteristics on the card.</p>
+<h3>The Dwarf and Elf Classes</h3>
+<p>The following code reproduces board game–style play, letting you create virtual cards for a dwarf and an elf, name your characters, and have them fight. The outcome of the fight will impact one of the character's body points, which represents the character's health. Be sure to note how OOP allows you to easily create many identical objects — in this case, dwarves or elves — by "stamping" them out of the predefined template, called a class.</p>
+<pre><code>import random
+
+class Dwarf(object):
+    def __init__(self, name):
         self.name = name
-        self.grade = grade
+        self.attack = 3
+        self.defend = 4
+        self.move = 2
+        self.body = 5
 
-    def is_passing(self) -> bool:
-        return self.grade >= 50
+    def talk(self):
+        print("I'm a blade-man, I'll cut ya!!!")</code></pre>
+<p>We started by importing <code>random</code> to simulate rolling a die; this is how your character will fight. Then we defined a class for a <em>Dwarf</em> character, capitalizing the first letter of the class name, and passed it an <code>object</code> argument. This <code>object</code> argument represents the <em>base class</em> of all types in Python.</p>
+<p><strong>TIP:</strong> Because <code>object</code> is the default parameter, you don't have to state it explicitly when defining a class. It's used here for clarity.</p>
+<p>As mentioned previously, a class is a template for creating objects of a <em>certain type</em>. For example, when you create a list or dictionary in Python, you are creating them from a class.</p>
+<p>The <code>Dwarf</code> class definition is like the card in the previous figure; it's the "genetic" blueprint for a dwarf. It will assign attributes, like strength and vitality, and methods, like how the character moves or talks. Attributes are variables associated with an object, and methods are attributes that also happen to be functions, which are passed a reference to their instance when they run.</p>
+<p>Immediately after the <code>class</code> definition, we defined a <em>constructor</em> method, also referred to as the <em>initialization</em> method. It sets up the initial attribute values for the object. The <code>__init__()</code> method is a special built-in method that Python automatically invokes as soon as a new object is created. In this case, we passed two arguments: <code>self</code> and the <code>name</code> of the object.</p>
+<p>The <code>__init__()</code> method is a <em>dunder</em> (double underscore) method, meaning its name is preceded and followed by double underscores. Also called <em>magic</em> or <em>special</em> methods, they let you create classes that behave like native Python data structures such as lists, tuples, and sets.</p>
+<p>The <code>self</code> parameter is a reference to the instance of the class that is being created, or a reference to the instance a method was invoked on, technically referred to as a <em>context</em> instance. You can think of it as a placeholder for the actual name you will give the object.</p>
+<p>If you create a new dwarf and name it "Steve," <code>self</code> will become Steve behind the scenes. For example, <code>self.attack</code> becomes "Steve's attack." If you create another dwarf named "Flint," <code>self</code> for that object will become "Flint." This way, the scope of Steve's health attribute is kept separate from Flint's.</p>
+<p>Next, we listed some attributes for a dwarf beneath the constructor definition. We added a name so you can tell one dwarf from another, as well as the value of key combat characteristics. Notice how this list resembles the character card.</p>
+<p><strong>TIP:</strong> While it's possible to use methods to assign new attributes later, it's best to initialize them all within the <code>__init__</code> method. This way, all the available attributes are conveniently listed in an easy-to-find location.</p>
+<p>We next defined a <code>talk()</code> method and passed it <code>self</code>. By passing it <code>self</code>, you linked the method to the object. In more comprehensive games, methods might include behaviors like movement and the ability to disarm traps.</p>
+<p>With the class definition complete, we'll use the code below to create an instance of the <code>Dwarf</code> class and assign this object to the local variable <code>lenn</code>, the dwarf's name. We'll print the name and attack attributes to demonstrate that we have access to them, and finish by invoking the <code>talk()</code> method. Note how both attributes and methods are invoked with dot notation syntax (such as <code>lenn.attack</code> and <code>lenn.talk()</code>):</p>
+<pre><code>lenn = Dwarf("Lenn")
+print(f"Dwarf name = {lenn.name}")
+print(f"Lenn's attack strength = {lenn.attack}")
+lenn.talk()</code></pre>
+<pre><code>Dwarf name = Lenn
+Lenn's attack strength = 3
+I'm a blade-man, I'll cut ya!!!</code></pre>
+<p>Now we'll create an <em>elf</em> character, using the same process, and have it fight the dwarf. The elf's body attribute will be updated to reflect the outcome of the battle.</p>
+<pre><code>class Elf(object):
+    pointed_ears = True
 
-    def __repr__(self) -> str:
-        return f"Student(name='{self.name}', grade={self.grade})"
+    def __init__(self, name):
+        self.name = name
+        self.attack = 4
+        self.defend = 4
+        self.move = 4
+        self.body = 4
 
-s = Student("Alice", 88)
-print(s.is_passing())  # True
-print(s)               # Student(name='Alice', grade=88)</code></pre>
-<h3>Instance vs Class Attributes</h3>
-<pre><code>class Counter:
-    count = 0                       # class attribute — shared
+esseden = Elf("Esseden")
+print(f"Elf name = {esseden.name}")
+print(f"Esseden body value = {esseden.body}")</code></pre>
+<pre><code>Elf name = Esseden
+Esseden body value = 4</code></pre>
+<p>First, we defined an <code>Elf</code> class and passed it <code>object</code>, as we did with the <code>Dwarf</code> class. Next, for instructional purposes, we did something different. We added an attribute, <code>pointed_ears</code>, immediately <em>after</em> defining the class and <em>before</em> defining the initialization method.</p>
+<p>Classes are objects, too, so they can have their own attributes. <em>Class attributes</em> are common to <em>all</em> objects made from the class and behave sort of like global variables.</p>
+<p>In this case, all the elves you build will have pointed ears. By placing this at the class level, you don't need to include it at the object level. Likewise, you can define <em>class methods</em>, that act on all objects. For example, all pirate characters might say "Arrgh!" before they speak.</p>
+<p>Next, we defined the initialization method and assigned some attributes. We made them slightly different from the dwarf's and well-balanced, like an elf. We then instantiated an elf named Esseden and accessed his name and body attributes using <code>print()</code>.</p>
+<p>Next, we'll have our two characters interact using the roll of a virtual die with a maximum value equal to the character's attack or defend value. We'll use the random module to choose a roll value in a range of 1 to Lenn's attack attribute plus 1, then repeat this process to get Esseden's defense.</p>
+<p>We'll calculate the damage to Esseden by subtracting Esseden's roll value from Lenn's roll value, and if the damage is a <em>positive</em> number, subtract it from Esseden's body attribute. We'll use <code>print()</code> to confirm the elf's current health.</p>
+<pre><code>lenn_attack_roll = random.randrange(1, lenn.attack + 1)
+print(f"Lenn attack roll = {lenn_attack_roll}")
 
-    def __init__(self):
-        Counter.count += 1          # modifies the class attribute
-        self.id = Counter.count     # instance attribute — unique
+esseden_defend_roll = random.randrange(1, esseden.defend + 1)
+print(f"Esseden defend roll = {esseden_defend_roll}")
 
-a = Counter()
-b = Counter()
-print(a.id, b.id)        # 1 2
-print(Counter.count)     # 2</code></pre>
-<h3>Inheritance</h3>
-<p>Create specialised versions of an existing class:</p>
-<pre><code>class Animal:
-    def speak(self):
-        return "..."
+damage = lenn_attack_roll - esseden_defend_roll
+if damage > 0:
+    esseden.body -= damage
 
-class Dog(Animal):
-    def speak(self):
-        return "Woof!"
+print(f"Esseden current body value = {esseden.body}")</code></pre>
+<pre><code>Lenn attack roll = 3
+Esseden defend roll = 1
+Esseden body value = 2</code></pre>
+<p>The roll results here are random, so you may get a different outcome.</p>
+<p>As you can imagine, building many similar characters and keeping track of their changing attributes could quickly get complicated with procedural programming. OOP provides a modular structure for your program, makes it easy to hide complexity and ownership of scope with encapsulation, permits problem-solving in bite-sized chunks, and produces sharable templates that can be modified and used elsewhere.</p>
+<h3>Adding a Class with Inheritance</h3>
+<p><em>Inheritance</em>, a key concept in OOP, lets you define a new <em>child</em> class based on an existing <em>parent</em> or <em>ancestor</em> class. (Technically, the original class is called a <em>base class</em> or <em>superclass</em>. The new class is called a <em>derived class</em> or <em>subclass</em>.)</p>
+<p>The new subclass inherits all of the attributes and methods of the existing superclass. This makes it easy to copy and extend an existing base class by adding new attributes and methods specific to the subclass.</p>
+<p>Let's make a new elf class called <code>Elden</code> that inherits from and modifies our current <code>Elf</code> class. We'll assume the Elden are "high elves" which are archers and come with a quiver of arrows. Otherwise, they have the same attributes as a common elf.</p>
+<pre><code>class Elden(Elf):
+    def __init__(self, name):
+        Elf.__init__(self, name)
+        self.arrows = 24
 
-class Cat(Animal):
-    def speak(self):
-        return "Meow!"
+    def fire_arrow(self):
+        if self.arrows > 0:
+            self.arrows -= 1
+            print(f"\\nPphsssssttttttt!")
+            print(f"{self.name} arrows remaining = {self.arrows}")
+        else:
+            print("\\nArrows depleted")</code></pre>
+<p>To create a child class, we passed the class statement the name of the parent, or superclass, which in this case is <code>Elf</code>. Remember that, when you first defined <code>Elf</code>, you passed it <code>object</code>. This meant that the <code>Elf</code> class was inherited from the <code>object</code> class, which is the root of all Python objects. The <code>object</code> class provides the default implementation of common methods that all derived classes might need. By passing <code>Elf</code> instead of <code>object</code>, you got the attributes and methods under <code>object</code> as well as the new ones you added to the <code>Elf</code> class.</p>
+<p>Next, we defined the <code>__init__()</code> initialization method for the <code>Elden</code> class, which, like the <code>Elf</code> class, has a <code>self</code> and <code>name</code> parameter. Immediately beneath it, we called the initialization method from the <code>Elf</code> class and passed it <code>Elf</code> instead of <code>self</code>, along with a <code>name</code> parameter. Passing in the <code>Elf</code> class gives you access to all the attributes in the <code>Elf.__init__()</code> method, such as <code>attack</code>, <code>defend</code>, and <code>body</code> attributes, so you don't need to duplicate any code.</p>
+<p>If you don't define an <code>__init__()</code> method for a child class, it will use the <code>__init__()</code> method from the parent class. If you want to <em>override</em> some of the attribute values in the parent class or add new attributes, you'll need to include an <code>__init__()</code> method for the child class, as we did in this example.</p>
+<p>Our original <code>Elf</code> class did not allow for arrows, so we added a new <code>self.arrows</code> attribute. We set the complement of arrows to 24. The Elden elf will need a way to fire the arrows, so we defined a new method called <code>fire_arrow()</code>. If we were writing a complete game this would include an advantage such as rolling an extra attack die or being able to attack from a distance.</p>
+<p>Now, let's instantiate an Elden named Legolas, access their name, and shoot an arrow.</p>
+<pre><code>legolas = Elden("Legolas")
+print(f"Elden name = {legolas.name} ")
 
-for animal in [Dog(), Cat()]:
-    print(animal.speak())
-# Woof!
-# Meow!</code></pre>
-<h3>Introducing Dataclasses (Python 3.7+)</h3>
-<p>When a class mainly holds data, <code>@dataclass</code> eliminates boilerplate by auto-generating <code>__init__</code>, <code>__repr__</code>, and <code>__eq__</code>:</p>
-<pre><code>from dataclasses import dataclass
+legolas.fire_arrow()</code></pre>
+<pre><code>Elden name = Legolas
+
+Pphsssssttttttt!
+Legolas arrows remaining = 23</code></pre>
+<p>By using inheritance, we reduced the amount of code we needed to write for the new <code>Elden</code> class by "borrowing" from the existing <code>Elf</code> class. And it gets better. In the next section, we'll look at another way to reduce the amount of code needed to define classes.</p>
+<h3>Using the super() Function for Inheritance</h3>
+<p>The <code>super()</code> built-in function removes the need for an explicit call to a base class name when invoking base class methods. It works with both single and multiple inheritance.</p>
+<p>For example, in the <code>Elden</code> class definition, you called the <code>Elf</code> class's <code>__init__()</code> method within the <code>Elden</code> class's <code>__init__()</code> method, as follows:</p>
+<pre><code>class Elden(Elf):
+    def __init__(self, name):
+        Elf.__init__(self, name)</code></pre>
+<p>This lets the <code>Elden</code> class inherit from <code>Elf</code>. Alternatively, you could have used the <code>super()</code> function, which returns a <em>proxy object</em> that allows access to methods of the base class:</p>
+<pre><code>class Elden(Elf):
+    def __init__(self, name):
+        super().__init__(name)</code></pre>
+<p>In this case, <code>super()</code> removes the need for an explicit call to the <code>Elf</code> class. When using single inheritance, <code>super()</code> is just a fancier way to refer to the base type. It makes the code a bit more maintainable.</p>
+<p>For example, if you are using <code>super()</code> everywhere and want to change the name of the base class (such as from <code>Elf</code> to <code>CommonElf</code>) you need to change the name only once when defining the base class.</p>
+<p>Another use for <code>super()</code> is to access inherited methods that have been overridden in a new class. Let's assume we've made a new <code>HighElf</code> class where the elf character uses the inherited <code>Elden</code> class's <code>fire_arrow()</code> method to fire <em>two</em> arrows at a time instead of one. We've overridden the method, but if we run into a situation where we want to fire a <em>single</em> arrow, we can call the base class's method by using <code>super().fire_arrow()</code>. This references the original method, which fires a single arrow.</p>
+<p>The use of <code>super()</code> is somewhat controversial. On one hand, it makes code more maintainable. On the other, it makes it less explicit, which violates the Zen of Python edict "Explicit is better than implicit."</p>
+<h3>The Dataclass</h3>
+<p>The built-in <code>dataclass</code> module introduced in Python 3.7 provides a convenient way to reduce code redundancy by making classes less verbose. Although primarily designed for classes that <em>store data</em>, data classes work just like regular classes and can include methods that interact with the data. Some use cases include classes for bank accounts, the content of scientific articles, and employee information.</p>
+<p>A dataclass comes with basic "boilerplate" functionality already implemented. You can instantiate, print, and compare dataclass instances straight out of the box. Many of the common things you do in a class can be reduced to a few basic instructions.</p>
+<p>Dataclasses are implemented using a helpful and powerful Python tool called a <em>decorator</em>. A decorator is a function designed to wrap around (encapsulate) another function or class to alter or enhance the wrapped object's behavior. It lets you modify the behavior without permanently changing the object.</p>
+<p>Decorators also let you avoid duplicating code when you're running the same process on multiple functions, such as checking memory use, adding logging, or testing performance.</p>
+<h3>Decorator Basics</h3>
+<p>To see how decorators work, let's define a function that squares a number. Then, we'll define a decorator function that squares that result. Enter the following in a text editor:</p>
+<pre><code>def square_it(x):
+    return x**2
+
+def square_it_again(func):
+    def wrapper(*args, **kwargs):
+        result = (func(*args, **kwargs))**2
+        return result
+    return wrapper</code></pre>
+<p>The first function, <code>square_it()</code>, takes a number, represented by x, and returns its square. The second function, <code>square_it_again()</code>, will serve as a decorator to the first function and is a little more complicated.</p>
+<p>The decorator function has a <code>func</code> parameter, representing a function. Because functions are objects, you can pass a function to another function as an argument and even define a function within a function. When we <em>call</em> this decorator function, we'll pass it the <code>square_it()</code> function as an argument.</p>
+<p>Next, we defined an inner function, which we called <code>wrapper()</code>. Because <code>square_it()</code> takes an argument, we need to set up the inner function to handle arguments by using the special positional and keyword arguments <code>*args</code> and <code>**kwargs</code>.</p>
+<p>The <code>*args</code> and <code>**kwargs</code> syntax provide flexibility in handling variable numbers of arguments, both positional and keyword, in Python functions. The <code>*args</code> syntax in a function definition allows the function to accept any number of positional arguments. The <code>**kwargs</code> syntax allows a function to accept any number of keyword arguments. Combining both <code>*args</code> and <code>**kwargs</code> allows a function to accept any combination of positional and keyword arguments.</p>
+<p>Within the <code>wrapper()</code> function, we called the function we passed to the decorator (<code>func</code>), squared its output, assigned the resulting number to the <code>result</code> variable, and returned <code>result</code>. Finally, we returned the <code>wrapper()</code> function.</p>
+<p>To use the <code>square_it_again()</code> decorator, call it, pass it the function that you want to decorate (<code>square_it()</code>), and assign the result to a variable (<code>square</code>), which also represents a function:</p>
+<pre><code>square = square_it_again(square_it)
+print(type(square))</code></pre>
+<pre><code>&lt;class 'function'&gt;</code></pre>
+<p>You can now call the new function and pass it an appropriate argument:</p>
+<pre><code>print(square(3))</code></pre>
+<pre><code>81</code></pre>
+<p>In this example, we <em>manually</em> called the decorator function. This demonstrated how decorators work, but it's a bit verbose and contorted. In the next section, we'll look at a more convenient method for using a decorator.</p>
+<h3>Decorator Syntactic Sugar</h3>
+<p>In computer science, <em>syntactic sugar</em> is clear, concise syntax that simplifies the language and makes it "sweeter" for human use. The syntactic sugar for a decorator is the @ symbol, which must be immediately followed by the name of the decorator function. The next line must be the definition statement for the function or class being wrapped, as follows:</p>
+<pre><code>@decorator_func_name
+def new_func():
+    do something</code></pre>
+<p>In this case, <code>decorator_func_name</code> represents the decorator function, and <code>new_func()</code> is the function being wrapped. A class definition can be substituted for the <code>def</code> statement.</p>
+<p>To see how it works, let's re-create our number-squaring example from the beginning. We'll leave off assigning the <code>square</code> variable, as we don't need it anymore:</p>
+<pre><code>def square_it_again(func):
+    def wrapper(*args, **kwargs):
+        result = (func(*args, **kwargs))**2
+        return result
+    return wrapper
+
+@square_it_again
+def square_it(x):
+    return x**2
+
+print(square_it(3))</code></pre>
+<pre><code>81</code></pre>
+<p>After defining our <code>square_it_again()</code> function again, we added the decorator and defined the <code>square_it()</code> function. After that, we called the <code>square_it()</code> function the same way we would if the decorator didn't exist.</p>
+<p><strong>NOTE:</strong> when using the @ symbol, use the decorator function name <strong>without parentheses</strong>.</p>
+<p>If decorators make your head spin a little, don't worry. If you can type <code>@dataclass</code>, you can use dataclasses. This decorator modifies regular Python classes so that you can define them using shorter and sweeter syntax.</p>
+<h3>Demonstrating Dataclasses</h3>
+<p>To see the benefits of dataclasses, let's define a <em>regular</em> class and then repeat the exercise using a <em>dataclass</em>. Our goal will be to make generic ship objects that we can track on a simulation grid. For each ship, we'll need to supply a name, a classification (like "frigate"), a country of registry, and a location.</p>
+<h3>Defining Ship as a Regular Class</h3>
+<p>To define a regular class called <code>Ship</code>, in a text editor, enter the following and then save it as <em>ship_tracker.py</em>:</p>
+<pre><code>class Ship:
+    def __init__(self, name, classification, registry, location):
+        self.name = name
+        self.classification = classification
+        self.registry = registry
+        self.location = location
+        self.obj_type = 'ship'
+        self.obj_color = 'black'</code></pre>
+<p>The initialization method contains multiple parameters, such as a <code>name</code> and <code>registry</code>. These will need to be passed as arguments when instantiating an object based on this class.</p>
+<p>Note how we're forced to duplicate code by repeating each parameter name, like <code>classification</code>, three times: once as a parameter and twice when assigning the instance attribute. The more data you need to pass to the method, the greater this redundancy.</p>
+<p>In addition to the parameters passed to the initialization method, the <code>Ship</code> class includes two "fixed" attributes representing the object <em>type</em> and <em>color</em>. These are assigned using an equal sign, as with a regular class. Because these attributes are always the same for a given object, there's no need to pass them as arguments. Now, let's instantiate a new ship object. Enter the following, save the file, and run it:</p>
+<pre><code>garcia = Ship('Garcia', 'frigate', 'USA', (20, 15))
+print(garcia)</code></pre>
+<pre><code>&lt;__main__.Ship object at 0x0000021F5FF501F0&gt;</code></pre>
+<p>This created a US frigate named <code>garcia</code> at grid location <code>(20, 15)</code>. But when you print the object, the output isn't very helpful.</p>
+<p>The issue here is that printing information on an object requires you to define additional <em>dunder methods</em>, like <code>__str__</code> and <code>__repr__</code>, that return string representations of objects for informational and debugging purposes.</p>
+<p>Another useful method is <code>__eq__</code>, which lets you compare instances of a class. The list of special methods in Python is long, but a few basic examples are listed in the following table:</p>
+<table>
+<thead><tr><th>Special Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>__init__(self)</code></td><td>Called when initializing an object from a class.</td></tr>
+<tr><td><code>__del__(self)</code></td><td>Called to destroy an object.</td></tr>
+<tr><td><code>__repr__(self)</code></td><td>Returns a printable string for the object to use in debugging.</td></tr>
+<tr><td><code>__str__(self)</code></td><td>Returns a string for pretty-printing useful information about an object. If not implemented, <code>__repr__</code> is used instead.</td></tr>
+<tr><td><code>__eq__(self, other)</code></td><td>Performs an equal to (==) comparison of two objects.</td></tr>
+</tbody>
+</table>
+<p>Defining these methods for each class you write can become a burden, which is where dataclasses come in. Dataclasses automatically handle the redundancy issues around attributes and dunder methods.</p>
+<h3>Defining Ship as a Dataclass</h3>
+<p>Now, let's define the <code>Ship</code> class again as a dataclass. Do this in a new file named <em>ship_tracker_dc.py</em> (for "ship tracker dataclass"):</p>
+<pre><code>from math import dist
+from dataclasses import dataclass
 
 @dataclass
-class DataPoint:
-    label: str
-    value: float
-    timestamp: str
+class Ship:
+    name: str
+    classification: str
+    registry: str
+    location: tuple
+    obj_type = 'ship'
+    obj_color = 'black'</code></pre>
+<p>We started by importing the <code>math</code> and <code>dataclass</code> modules. We'll use the <code>dist</code> method from <code>math</code> to calculate the distance between ships, and <code>dataclass</code> to decorate our <code>Ship</code> class. (To use <code>dist</code>, you'll need Python 3.8 or higher).</p>
+<p>Next, we prefixed <code>dataclass</code> with the @ symbol, to make it a decorator, and started defining the <code>Ship</code> class on the following line.</p>
+<p>Normally, the next step would be to define the <code>__init__()</code> method with <code>self</code> and other parameters, but dataclasses don't need this. The initialization is handled behind the scenes, removing the need for this code. You'll still need to list the attributes, however, but with a lot less redundancy than before.</p>
+<p>For each attribute that must be passed as an argument, we entered the attribute name, followed by a colon, followed by a <em>type hint</em>, or type <em>annotation</em>. A type hint tells people reading your code what types of data to expect. Static analysis tools can also use type hints to check your code for errors.</p>
+<p>A class variable with a type hint is called a <em>field</em>. The <code>@dataclass</code> decorator examines classes to find fields. Without a type hint, the attribute won't become a field in the dataclass. In this example, all the fields in the <code>Ship</code> class use the string data type (<code>str</code>), except for <code>location</code>, which uses a tuple (for a pair of x and y coordinates).</p>
+<p><strong>TIP:</strong> You can use default values with the type annotations. For example, <code>location: tuple = (0, 0)</code> will place new <code>Ship</code> objects at coordinates x = 0, y = 0 if none are specified when the object is created. When you use a default parameter, however, <strong>all subsequent parameters must have default values</strong>.</p>
+<p>Because we don't need to pass the <code>obj_type</code> and <code>obj_color</code> attributes as arguments when creating a new object, we defined them using an equal sign rather than a colon, and with <em>no</em> type hints. By assigning them as we would in a regular class, every <code>Ship</code> object will, by default, be designated a "ship" and have a consistent color attribute for plotting.</p>
+<p>Dataclasses can have methods, just like regular classes. Next, we'll define a method that calculates the Euclidian distance between two ships. Note that the <code>def</code> statement below is indented four spaces relative to the class definition:</p>
+<pre><code>def distance_to(self, other):
+    distance = round(dist(self.location, other.location), 2)
+    return str(distance) + ' ' + 'km'</code></pre>
+<p>The <code>distance_to()</code> method takes the current ship object and another ship object as arguments. It then uses the built-in <code>dist</code> method to get the distance between them. This method returns the Euclidean distance between two points (x and y), where x and y are the coordinates of that point. The distance is returned as a <em>string</em>, so we can include a reference to kilometers.</p>
+<p>Now, in the global scope with no indentation, create three ship objects, passing them the following information:</p>
+<pre><code>garcia = Ship('Garcia', 'frigate', 'USA', (20, 15))
+ticonderoga = Ship('Ticonderoga', 'destroyer', 'USA', (5, 10))
+kobayashi = Ship('Kobayashi', 'maru', 'Federation', (10, 22))</code></pre>
+<p>If you're working in an IDE, such as Spyder, as soon as you begin entering the <code>Ship()</code> class arguments, a window should appear, prompting you on the proper inputs.</p>
+<p>Because classes you create are legitimate datatypes in Python, they behave like built-in datatypes. As a result, IDEs like Spyder will use the type hints to guide you when creating the ship objects.</p>
+<p>It's also worth noting that you don't need to use the correct data type for a parameter. Because Python is a <em>dynamically typed language</em> (meaning that variable types are <em>inferred</em> at runtime, not at compile-time, based on the value assigned) you can assign an integer as the classification argument, and the program will still run.</p>
+<p><strong>TIP:</strong> Even though the Python interpreter ignores type hints, you can use third-party static type-checking tools, like Mypy, to analyze your code and check for errors before the program runs.</p>
+<p>The <code>@dataclass</code> decorator is a code generator that automatically adds methods under the hood. This includes the <code>__repr__</code> method. This means that you now get useful information when you call <code>print(garcia)</code>:</p>
+<pre><code>print(garcia)</code></pre>
+<pre><code>Ship(name='Garcia', classification='frigate', registry='USA', location=(20, 15))</code></pre>
+<p>Now, let's check that our data is there and that the method works. Add the following lines and rerun the script:</p>
+<pre><code>ships = [garcia, ticonderoga, kobayashi]
 
-dp = DataPoint("temperature", 23.5, "2025-01-15")
-print(dp)  # DataPoint(label='temperature', value=23.5, timestamp='2025-01-15')</code></pre>
-<h3>Dataclass Features</h3>
+for ship in ships:
+    print(f"The {ship.classification} {ship.name} is visible.")
+    print(f"{ship.name} is a {ship.registry} {ship.obj_type}.")
+    print(f"The {ship.name} is currently at grid position {ship.location}\\n")
+print(f"Garcia is {garcia.distance_to(kobayashi)} from the Kobayashi")</code></pre>
+<pre><code>The frigate Garcia is visible.
+Garcia is a USA ship.
+The Garcia is currently at grid position (20, 15)
+
+The destroyer Ticonderoga is visible.
+Ticonderoga is a USA ship.
+The Ticonderoga is currently at grid position (5, 10)
+
+The maru Kobayashi is visible.
+Kobayashi is a Federation ship.
+The Kobayashi is currently at grid position (10, 22)
+
+Garcia is 12.21 km from the Kobayashi</code></pre>
+<p>By putting the ship objects in a list, we were able to loop through the list, access attributes using dot notation, and print the results.</p>
+<p>The <code>Ship</code> dataclass lets you instantiate a ship object and store data such as the ship's name and location in type-annotated fields. By reducing redundancy and automatically generating required class methods such as <code>__init__()</code> and <code>__repr__()</code>, the <code>@dataclass</code> decorator lets you produce code that's easier to read and write.</p>
+<p><strong>FYI:</strong> The <code>@classmethod</code> and <code>@staticmethod</code> decorators let you define methods inside a class namespace that are not connected to a particular instance of that class. Neither of these are commonly used and can often be replaced with regular functions. You should be aware of their existence, however, as they're often mentioned in OOP tutorials and can be useful in some cases.</p>
+<h3>Plotting with the Ship Dataclass</h3>
+<p>To get a better feel for how you might use OOP, let's take this project a step further and plot our ship objects on a grid. To plot the ships, we'll use the Matplotlib plotting library.</p>
+<p>In a text editor, save or copy your <em>ship_tracker_dc.py</em> file to a new file called <em>ship_display.py</em> and edit it as follows:</p>
+<pre><code>from math import dist
+from dataclasses import dataclass
+import matplotlib.pyplot as plt
+
+@dataclass
+class Ship:
+    name: str
+    classification: str
+    registry: str
+    location: tuple
+    obj_type = 'ship'
+    obj_color = 'black'
+
+    def distance_to(self, other):
+        distance = round(dist(self.location, other.location), 2)
+        return str(distance) + ' ' + 'km'
+
+garcia = Ship('Garcia', 'frigate', 'USA', (20, 15))
+ticonderoga = Ship('Ticonderoga', 'destroyer', 'USA', (5, 10))
+kobayashi = Ship('Kobayashi', 'maru', 'Federation', (10, 22))
+
+VISIBLE_SHIPS = [garcia, ticonderoga, kobayashi]
+
+def plot_ship_dist(ship1, ship2):
+    sep = ship1.distance_to(ship2)
+    for ship in VISIBLE_SHIPS:
+        plt.scatter(x=ship.location[0],
+                     y=ship.location[1],
+                     marker='d',
+                     color=ship.obj_color)
+        plt.text(ship.location[0], ship.location[1], ship.name)
+    plt.plot([ship1.location[0], ship2.location[0]],
+              [ship1.location[1], ship2.location[1]],
+              color='gray',
+              linestyle="--")
+    plt.text((ship2.location[0]),
+              (ship2.location[1] - 2),
+              sep,
+              c='gray')
+    plt.xlim(0, 30)
+    plt.ylim([0, 30])
+    plt.show()
+
+plot_ship_dist(kobayashi, garcia)</code></pre>
+<p>We started by adding a line to import Matplotlib. After instantiating the three ship objects, we replaced the remaining code starting at <code>VISIBLE_SHIPS</code>. This line assigned a list of the three ship objects that represent the ships you can see on the simulation grid. We treated this as a constant, hence the all-caps format.</p>
+<p>Next, we defined a function for calculating the distance between two ships (<code>ship1</code> and <code>ship2</code>) and for plotting all the visible ships. We called the <code>Ship</code> class's <code>distance_to()</code> method on the two ships, assigned the result to a variable named <code>sep</code> (for separation), and then looped through the visible list, plotting each ship in a scatterplot. For this, Matplotlib needs the ship's x and y locations, a marker style ('d' represents a diamond shape), and a color (the <code>ship.obj_color</code> attribute).</p>
+<p>Next, we used Matplotlib's <code>plt.plot()</code> method to draw a dashed line between the ships used for the distance measurement. This method takes the x–y locations of each ship, a color, and a line style. We followed this with the <code>plt.text()</code> method, for adding text to the plot. As arguments, we passed it a location, the <code>sep</code> variable, and a color.</p>
+<p>We completed the function by setting x and y limits to the plot and then calling the <code>plt.show()</code> method to display the plot.</p>
+<p>Back in the global scope, we called the <code>plot_ship_dist()</code> function and passed it the <code>kobayashi</code> and <code>garcia</code> ship objects.</p>
+<p>Bundling data and methods into dataclasses produces compact, intuitive objects that you can manipulate <em>en masse</em>. Thanks to OOP, we could easily generate and track a multitude of ship objects on our grid.</p>
+<h3>Using Fields and Post-Init Processing</h3>
+<p>Sometimes you'll want to initialize an attribute that depends on the value of another attribute. Because this other attribute must already exist, you'll need to initialize the second attribute outside the <code>__init__</code> function. Fortunately, Python comes with the built-in <code>__post_init__</code> function that's expressly designed for this purpose.</p>
+<p>Let's look at an example based on a naval war game simulation. Because alliances can change through time, a ship registered to a certain country might switch from ally to enemy. Although the <code>registry</code> attribute is <em>fixed</em>, its allegiance is <em>uncertain</em>, and you might want to evaluate its friend-or-foe status <em>post-initialization</em>.</p>
+<p>To create a version of the <code>Ship</code> dataclass that accommodates this need, in the text editor, enter the following and then save it as <em>ship_allegiance_post_init.py</em>:</p>
 <pre><code>from dataclasses import dataclass, field
 
 @dataclass
-class Experiment:
+class Ship:
     name: str
-    trials: int = 0                        # default value
-    results: list = field(default_factory=list)  # mutable default
+    classification: str
+    registry: str
+    location: tuple
+    obj_type = 'ship'
+    obj_color = 'black'
+    friendly: bool = field(init=False)
 
-    def run(self, result: float):
-        self.results.append(result)
-        self.trials += 1
+    def __post_init__(self):
+        unfriendlies = ('IKS')
+        self.friendly = self.registry not in unfriendlies</code></pre>
+<p>In this case, we started by importing both <code>dataclass</code> and <code>field</code> from the <code>dataclasses</code> module. The <code>field</code> method helps you change various properties of attributes in the dataclass, such as by providing them with default values.</p>
+<p>Next, we initialized the <code>Ship</code> class like we did in the <em>ship_tracker_dc.py</em> program, except that we added a new attribute, <code>friendly</code>, that's set to a Boolean data type with a default value of <code>False</code>. Note that we set this default value by calling the <code>field</code> method and using the keyword argument <code>init</code>.</p>
+<p>We defined the <code>__post_init__()</code> method with <code>self</code> as a parameter. We then assigned a tuple of unfriendly registry designations to a variable named <code>unfriendlies</code>.</p>
+<p>Finally, we assigned <code>True</code> or <code>False</code> to the <code>self.friendly</code> attribute by checking whether the current object's <code>self.registry</code> attribute is present in the <code>unfriendlies</code> tuple.</p>
+<p>Let's test it out by making two ships, one friendly and one unfriendly. Note that you don't pass the <code>Ship</code> class an argument for the <code>friendly</code> attribute; this is because it uses a default value and is ultimately determined by the <code>__post_init__()</code> method:</p>
+<pre><code>homer = Ship('Homer', 'tug', 'USA', (20, 9))
+bortas = Ship('Bortas', 'D5', 'IKS', (15, 25))
+print(homer)
+print(bortas)</code></pre>
+<pre><code>Ship(name='Homer', classification='tug', registry='USA', location=(20, 9), friendly=True)
+Ship(name='Bortas', classification='D5', registry='IKS', location=(15, 25), friendly=False)</code></pre>
+<p>You may have noticed that you didn't need to explicitly call the <code>__post_init__()</code> method. This is because the dataclass-generated <code>__init__()</code> code calls the method automatically if it's defined in the class.</p>
+<p><strong>TIP:</strong> Inheritance (mostly) works the same with dataclasses as with regular classes. One thing to be careful of is that dataclasses combine attributes in a way that prevents the use of attributes with defaults in a parent class when a child contains attributes without defaults. So, you'll want to avoid setting field defaults on classes that are to be used as base classes.</p>
+<h3>Optimizing Dataclasses with __slots__</h3>
+<p>If you're using a dataclass for storing lots of data, or if you expect to instantiate thousands to millions of objects from a single class, you should consider using the class variable <code>__slots__</code>. This special attribute optimizes the performance of a class by decreasing both memory consumption and the time it takes to access attributes.</p>
+<p>A regular class stores instance attributes in an internally managed dictionary named <code>__dict__</code>. The <code>__slots__</code> variable stores them using highly efficient, array-related data structures implemented in the C programming language.</p>
+<p>Here's an example using a standard dataclass called <code>Ship</code>, followed by a <code>ShipSlots</code> dataclass that uses <code>__slots__</code>. Enter this code in a text editor and save it as <em>ship_slots.py</em>:</p>
+<pre><code>from dataclasses import dataclass
 
-    @property
-    def average(self) -> float:
-        return sum(self.results) / self.trials if self.trials else 0.0
+@dataclass
+class Ship:
+    name: str
+    classification: str
+    registry: str
+    location: tuple
 
-exp = Experiment("A/B Test")
-exp.run(0.42)
-exp.run(0.38)
-print(exp.average)  # 0.4</code></pre>
-<h3>Regular Classes vs Dataclasses</h3>
-<table>
-<thead><tr><th>Feature</th><th>Regular Class</th><th>Dataclass</th></tr></thead>
-<tbody>
-<tr><td><code>__init__</code></td><td>Write it yourself</td><td>Auto-generated</td></tr>
-<tr><td><code>__repr__</code></td><td>Write it yourself</td><td>Auto-generated</td></tr>
-<tr><td><code>__eq__</code></td><td>Write it yourself</td><td>Auto-generated (compares all fields)</td></tr>
-<tr><td>Mutable defaults</td><td>Tricky (shared references)</td><td><code>field(default_factory=...)</code></td></tr>
-<tr><td>Validation</td><td>In <code>__init__</code></td><td><code>__post_init__</code></td></tr>
-<tr><td>Best for</td><td>Complex logic, inheritance</td><td>Data containers, config, DTOs</td></tr>
-</tbody>
-</table>
-<h3>When to Use What</h3>
-<ul>
-<li><strong>Dataclass</strong> — storing data with minimal behaviour (config objects, API responses, record types)</li>
-<li><strong>Regular class</strong> — complex methods, inheritance hierarchies, custom initialisation logic</li>
-<li><strong>Named tuple</strong> — immutable, lightweight alternative when you don't need mutation</li>
-</ul>
-<p>In data science workflows, dataclasses are perfect for structuring experiment configs, pipeline steps, and model parameters — anywhere you want clear, typed data without boilerplate.</p>'''
+@dataclass
+class ShipSlots:
+    __slots__ = 'name', 'classification', 'registry', 'location'
+    name: str
+    classification: str
+    registry: str
+    location: tuple</code></pre>
+<p>The only difference between the two class definitions is the assignment of a tuple of attribute names to the <code>__slots__</code> variable. This variable lets you explicitly state which instance attributes you expect your objects to have.</p>
+<p>Now, instead of having a <em>dynamic dictionary</em> (<code>__dict__</code>) that permits you to add attributes to objects after the creation of an object, you have a <em>static structure</em> that saves the overhead of one dictionary for every object that uses <code>__slots__</code>. Because it's considered good practice to initialize all of an object's attributes at once, the inability to dynamically add attributes with <code>__slots__</code> is not necessarily a detriment.</p>
+<p>Using <code>__slots__</code> with multiple inheritance can become problematic, however. Likewise, you'll want to avoid using it when providing default values via class attributes for instance variables.</p>
+<h3>The Recap</h3>
+<p>Object-oriented programming helps you organize code while reducing its redundancy. Classes let you combine related data — and functions that act on that data — into new custom data types.</p>
+<p>Functions in OOP are called <em>methods</em>. When you define a class using a class statement, you couple related elements together so that the relationship between the data and the methods is clear, and so the proper methods are used with the appropriate data. Consequently, you'll want to consider using classes when you have multiple kinds of data, multiple functions that go with each kind of data, and a growing codebase that's becoming increasingly complex.</p>
+<p>A class serves as a template or factory for making objects, also called <em>instances</em> of a class. You create objects by calling the class's name using function notation. As with regular functions, this practice introduces a new local name scope, and all names assigned in the class statement generate object attributes shared by all instances of the class. Attributes store data, and each object's attributes might change over time to reflect changes in the object's state.</p>
+<p>Classes can <em>inherit</em> attributes and methods from other classes, letting you reuse code. In this case, the new class is a <em>child</em> or <em>subclass</em>, and the preexisting class is the <em>parent</em> or <em>base class</em>. Inherited attributes and methods can be overwritten in the subclass to modify or enhance the inherited behaviors.</p>
+<p>The built-in <code>super()</code> function is a shorthand way to create subclasses that are easy to maintain. With <code>super()</code>, you can also call original methods from a base class if they've been modified in the subclass. Because Python lets classes inherit from multiple parents, this can result in complex code that's difficult to understand, so use <code>super()</code> with caution.</p>
+<p><em>Decorators</em> are functions that modify the behavior of another function without permanently changing the modified function. They also help you avoid duplicating code.</p>
+<p>The <code>@dataclass</code> decorator decorates class statements and makes them more concise. Although dataclasses were designed for classes that mainly store data, they can still be used as regular classes. A nice feature is that IDEs like Spyder will use the dataclass fields to prompt users with the proper class names, arguments, methods, and documentation, removing the need to see all of the class definition code. A downside, however, is that the use of multiple inheritance can be more difficult with dataclasses than with regular classes.</p>
+<p>The <code>__slots__</code> class variable optimizes both memory usage and attribute access speeds. It comes with some limitations, however, such as, but not limited to, the inability to dynamically create attributes after initialization and increased complexity when using multiple inheritance.</p>
+<p>One thing we didn't touch on here is that you can combine related class statements and save them as Python files. These class libraries then can be imported into other programs as modules, just like you imported the <code>dataclass</code> module.</p>
+<p>There's a lot more to OOP than what we've covered here — it is the whole damn jungle, after all.</p>
+<p><em>Adapted from "Introducing Python Classes and Dataclasses" by Lee Vaughan, TDS Archive (Medium), Jan 23, 2024.</em></p>'''
             }
         )
         self._add_quiz(l1_3_1, [
